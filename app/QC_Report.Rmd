@@ -1,0 +1,1022 @@
+---
+title: "Mass Dynimics QC-Report"
+output:
+  html_document:
+    code_folding: hide
+    theme: united
+    toc: yes
+    toc_float: yes
+    self_contained: true
+    fig_caption: yes
+  pdf_document:
+    toc: yes
+---
+```{r, eval=TRUE, warning=FALSE, echo=FALSE, error=FALSE, message=FALSE}
+library(data.table)
+library(ggplot2)
+library(ggrepel)
+library(GGally)
+library(umap)
+library(FactoMineR)
+library(factoextra)
+library(corrplot)
+library(viridis)
+library(ggpubr)
+library(Hmisc)
+library(plotly)
+library(stringr)
+library(bit64)
+
+num_files <- expdes[, .N]
+run_per_condition <- expdes[, .(countRepMax = .N), by = .(experiment)]
+setnames(run_per_condition, "experiment", "condition")
+
+mod_pept_int_rep <- merge(
+  run_per_condition,
+  mod_pept_int[Imputed == 0, .(Repcount = .N), by = .(id, condition)],
+  by = c("condition")
+)
+mod_pept_int_rep[, repPC := Repcount/countRepMax]
+mod_pept_id_in_a_cond <- mod_pept_int_rep[repPC >= 0.5, unique(id)]
+mod_pept_int[, Valid := 0L]
+mod_pept_int[id %in% mod_pept_id_in_a_cond, Valid := 1L]
+rm(mod_pept_id_in_a_cond, mod_pept_int_rep)
+
+pept_int_rep <- merge(
+  run_per_condition,
+  pept_int[Imputed == 0, .(Repcount = .N), by = .(id, condition)],
+  by = c("condition")
+)
+pept_int_rep[, repPC := Repcount/countRepMax]
+pept_id_in_a_cond <- pept_int_rep[repPC >= 0.5, unique(id)]
+pept_int[, Valid := 0L]
+pept_int[id %in% pept_id_in_a_cond, Valid := 1L]
+rm(pept_id_in_a_cond, pept_int_rep)
+
+prot_int_rep <- merge(
+  run_per_condition,
+  prot_int[Imputed == 0, .(Repcount = .N), by = .(id, condition)],
+  by = c("condition")
+)
+prot_int_rep[, repPC := Repcount/countRepMax]
+prot_id_in_a_cond <- prot_int_rep[repPC >= 0.5, unique(id)]
+prot_int[, Valid := 0L]
+prot_int[id %in% prot_id_in_a_cond, Valid := 1L]
+rm(prot_id_in_a_cond, prot_int_rep)
+
+
+```
+
+
+# 1. Experiment Health
+
+## A. Principal Component Analysis (PCA) and Dimensionality Reduction {.tabset .tabset-fade .tabset-pills}
+
+### Proteins
+
+```{r, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
+# Prepare PCA data table
+# limiting the data by number of missing values as per input parameters:
+# limitImputedRatio
+# checkBy
+
+if (checkBy == "Experiment") {
+  pca_dt <- prot_int[Valid == 1, .(
+    id,
+    condition,
+    Replicate,
+    log2NInt,
+    run_id
+  )]
+  pca_dt <- dcast(pca_dt, condition + Replicate ~ id, value.var = "log2NInt")
+
+} else {
+  # pca_dt <- prot_int[Valid == 1, .(
+  #   id,
+  #   condition,
+  #   Replicate,
+  #   log2NInt,
+  #   run_id
+  # )]
+  # pca_dt <- dcast(pca_dt, condition + Replicate ~ id, value.var = "log2NInt")
+  #
+  print("ERROR")
+}
+
+num_dimensions = min(pca_dt[, .N-1], 10)
+res.pca <- PCA(pca_dt[, 3:ncol(pca_dt)], graph = FALSE, ncp = num_dimensions)
+eig.val <- get_eigenvalue(res.pca)
+eig.val <- data.table(dims = rownames(eig.val), eig.val)
+
+samples.pca <- get_pca_ind(res.pca)
+samples.coord <- data.table(pca_dt[, 1:2], samples.pca$coord)
+samples.coord[, Run := str_c(condition, Replicate, sep = " - ")]
+
+p <- ggplot(samples.coord, aes(x = Dim.1, y=Dim.2, colour=condition, fill=condition, label=Run)) +
+  stat_ellipse(geom = "polygon", alpha=0.1) +
+  geom_point(size = 3, alpha = 0.7) +
+  theme_minimal() +
+  scale_x_continuous(str_c("PCA 1 - ", eig.val[dims == "Dim.1", round(variance.percent,1)], "%")) +
+  scale_y_continuous(str_c("PCA 2 - ", eig.val[dims == "Dim.2", round(variance.percent,1)], "%"))
+
+ggplotly(p, tooltip = c("label")) %>% config(displayModeBar = F)
+
+scree_plot <- ggplot(eig.val[1:num_dimensions], aes(x=reorder(dims, -`variance.percent`), y=`variance.percent`)) +
+  geom_bar(stat="identity", fill = "skyblue2") +
+  theme_minimal() +
+  geom_text_repel(aes(label=(round(`variance.percent`,1))), direction = 'y') +
+  scale_x_discrete("PCA components") +
+  scale_y_continuous("% Variance") +
+  ggtitle("Scree plot")
+scree_plot
+
+name_of_column <- colnames(prot)[colnames(prot) == "adj.P.Val"]
+if (!identical(name_of_column, character(0)) && prot[get(name_of_column) <= 0.05, .N] > 1) {
+  DE_ids <- prot[get(name_of_column) <= 0.05, unique(id)]
+  pca_dt <- prot_int[id %in% DE_ids, .(
+    id,
+    condition,
+    Replicate,
+    log2NInt
+  )]
+  pca_dt <- dcast(pca_dt, condition + Replicate ~ id, value.var = "log2NInt")
+
+  num_dimensions = min(pca_dt[, .N-1], 10)
+  res.pca <- PCA(pca_dt[, 3:ncol(pca_dt)], graph = FALSE, ncp = num_dimensions)
+  eig.val <- get_eigenvalue(res.pca)
+  eig.val <- data.table(dims = rownames(eig.val), eig.val)
+
+  samples.pca <- get_pca_ind(res.pca)
+  samples.coord <- data.table(pca_dt[, 1:2], samples.pca$coord)
+  samples.coord[, Run := str_c(condition, Replicate, sep = " - ")]
+
+  p <- ggplot(samples.coord, aes(x = Dim.1, y=Dim.2, colour=condition, fill=condition, label=Run)) +
+    stat_ellipse(geom = "polygon", alpha=0.1) +
+    geom_point(size = 3, alpha = 0.7) +
+    theme_minimal() +
+    scale_x_continuous(str_c("PCA 1 - ", eig.val[dims == "Dim.1", round(variance.percent,1)], "%")) +
+    scale_y_continuous(str_c("PCA 2 - ", eig.val[dims == "Dim.2", round(variance.percent,1)], "%")) +
+    ggtitle(str_c("PCA plot using the ", length(DE_ids), " differencially expressed proteins"))
+  ggplotly(p, tooltip = c("label")) %>% config(displayModeBar = F)
+
+}
+```
+
+### Modification specific peptides
+```{r, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
+# Prepare PCA data table
+# limiting the data by number of missing values as per input parameters:
+# limitImputedRatio
+# checkBy
+
+if (checkBy == "Experiment") {
+  pca_dt <- mod_pept_int[Valid == 1, .(
+    id,
+    condition,
+    Replicate,
+    log2NInt,
+    run_id
+  )]
+  pca_dt <- dcast(pca_dt, condition + Replicate ~ id, value.var = "log2NInt")
+
+} else {
+  # pca_dt <- mod_pept_int[Valid == 1, .(
+  #   id,
+  #   condition,
+  #   Replicate,
+  #   log2NInt,
+  #   run_id
+  # )]
+  # pca_dt <- dcast(pca_dt, condition + Replicate ~ id, value.var = "log2NInt")
+  #
+  print("ERROR")
+}
+
+num_dimensions = min(pca_dt[, .N-1], 10)
+res.pca <- PCA(pca_dt[, 3:ncol(pca_dt)], graph = FALSE, ncp = num_dimensions)
+eig.val <- get_eigenvalue(res.pca)
+eig.val <- data.table(dims = rownames(eig.val), eig.val)
+
+samples.pca <- get_pca_ind(res.pca)
+samples.coord <- data.table(pca_dt[, 1:2], samples.pca$coord)
+samples.coord[, Run := str_c(condition, Replicate, sep = " - ")]
+
+p <- ggplot(samples.coord, aes(x = Dim.1, y=Dim.2, colour=condition, fill=condition, label=Run)) +
+  stat_ellipse(geom = "polygon", alpha=0.1) +
+  geom_point(size = 3, alpha = 0.7) +
+  theme_minimal() +
+  scale_x_continuous(str_c("PCA 1 - ", eig.val[dims == "Dim.1", round(variance.percent,1)], "%")) +
+  scale_y_continuous(str_c("PCA 2 - ", eig.val[dims == "Dim.2", round(variance.percent,1)], "%"))
+
+ggplotly(p, tooltip = c("label")) %>% config(displayModeBar = F)
+
+scree_plot <- ggplot(eig.val[1:num_dimensions], aes(x=reorder(dims, -`variance.percent`), y=`variance.percent`)) +
+  geom_bar(stat="identity", fill = "skyblue2") +
+  theme_minimal() +
+  geom_text_repel(aes(label=(round(`variance.percent`,1))), direction = 'y') +
+  scale_x_discrete("PCA components") +
+  scale_y_continuous("% Variance") +
+  ggtitle("Scree plot")
+scree_plot
+
+name_of_column <- colnames(mod_pept)[colnames(mod_pept) == "adj.P.Val"]
+if (!identical(name_of_column, character(0)) && mod_pept[get(name_of_column) <= 0.05, .N] > 1) {
+  DE_ids <- mod_pept[get(name_of_column) <= 0.05, unique(id)]
+  pca_dt <- mod_pept_int[id %in% DE_ids, .(
+    id,
+    condition,
+    Replicate,
+    log2NInt
+  )]
+  pca_dt <- dcast(pca_dt, condition + Replicate ~ id, value.var = "log2NInt")
+
+  num_dimensions = min(pca_dt[, .N-1], 10)
+  res.pca <- PCA(pca_dt[, 3:ncol(pca_dt)], graph = FALSE, ncp = num_dimensions)
+  eig.val <- get_eigenvalue(res.pca)
+  eig.val <- data.table(dims = rownames(eig.val), eig.val)
+
+  samples.pca <- get_pca_ind(res.pca)
+  samples.coord <- data.table(pca_dt[, 1:2], samples.pca$coord)
+  samples.coord[, Run := str_c(condition, Replicate, sep = " - ")]
+
+  p <- ggplot(samples.coord, aes(x = Dim.1, y=Dim.2, colour=condition, fill=condition, label=Run)) +
+    stat_ellipse(geom = "polygon", alpha=0.1) +
+    geom_point(size = 3, alpha = 0.7) +
+    theme_minimal() +
+    scale_x_continuous(str_c("PCA 1 - ", eig.val[dims == "Dim.1", round(variance.percent,1)], "%")) +
+    scale_y_continuous(str_c("PCA 2 - ", eig.val[dims == "Dim.2", round(variance.percent,1)], "%")) +
+    ggtitle(str_c("PCA plot using the ", length(DE_ids), " differencially expressed peptides"))
+  ggplotly(p, tooltip = c("label")) %>% config(displayModeBar = F)
+
+}
+
+```
+
+
+### Peptides
+
+```{r, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
+# Prepare PCA data table
+# limiting the data by number of missing values as per input parameters:
+# limitImputedRatio
+# checkBy
+
+if (checkBy == "Experiment") {
+  pca_dt <- pept_int[Valid == 1, .(
+    id,
+    condition,
+    Replicate,
+    log2NInt,
+    run_id
+  )]
+  pca_dt <- dcast(pca_dt, condition + Replicate ~ id, value.var = "log2NInt")
+
+} else {
+  # pca_dt <- pept_int[Valid == 1, .(
+  #   id,
+  #   condition,
+  #   Replicate,
+  #   log2NInt,
+  #   run_id
+  # )]
+  # pca_dt <- dcast(pca_dt, condition + Replicate ~ id, value.var = "log2NInt")
+  #
+  print("ERROR")
+}
+
+num_dimensions = min(pca_dt[, .N-1], 10)
+res.pca <- PCA(pca_dt[, 3:ncol(pca_dt)], graph = FALSE, ncp = num_dimensions)
+eig.val <- get_eigenvalue(res.pca)
+eig.val <- data.table(dims = rownames(eig.val), eig.val)
+
+samples.pca <- get_pca_ind(res.pca)
+samples.coord <- data.table(pca_dt[, 1:2], samples.pca$coord)
+samples.coord[, Run := str_c(condition, Replicate, sep = " - ")]
+
+p <- ggplot(samples.coord, aes(x = Dim.1, y=Dim.2, colour=condition, fill=condition, label=Run)) +
+  stat_ellipse(geom = "polygon", alpha=0.1) +
+  geom_point(size = 3, alpha = 0.7) +
+  theme_minimal() +
+  scale_x_continuous(str_c("PCA 1 - ", eig.val[dims == "Dim.1", round(variance.percent,1)], "%")) +
+  scale_y_continuous(str_c("PCA 2 - ", eig.val[dims == "Dim.2", round(variance.percent,1)], "%"))
+
+ggplotly(p, tooltip = c("label")) %>% config(displayModeBar = F)
+
+scree_plot <- ggplot(eig.val[1:num_dimensions], aes(x=reorder(dims, -`variance.percent`), y=`variance.percent`)) +
+  geom_bar(stat="identity", fill = "skyblue2") +
+  theme_minimal() +
+  geom_text_repel(aes(label=(round(`variance.percent`,1))), direction = 'y') +
+  scale_x_discrete("PCA components") +
+  scale_y_continuous("% Variance") +
+  ggtitle("Scree plot")
+scree_plot
+
+name_of_column <- colnames(pept)[colnames(pept) == "adj.P.Val"]
+if (!identical(name_of_column, character(0)) && pept[get(name_of_column) <= 0.05, .N] > 1) {
+  DE_ids <- pept[get(name_of_column) <= 0.05, unique(id)]
+  pca_dt <- pept_int[id %in% DE_ids, .(
+    id,
+    condition,
+    Replicate,
+    log2NInt
+  )]
+  pca_dt <- dcast(pca_dt, condition + Replicate ~ id, value.var = "log2NInt")
+
+  num_dimensions = min(pca_dt[, .N-1], 10)
+  res.pca <- PCA(pca_dt[, 3:ncol(pca_dt)], graph = FALSE, ncp = num_dimensions)
+  eig.val <- get_eigenvalue(res.pca)
+  eig.val <- data.table(dims = rownames(eig.val), eig.val)
+
+  samples.pca <- get_pca_ind(res.pca)
+  samples.coord <- data.table(pca_dt[, 1:2], samples.pca$coord)
+  samples.coord[, Run := str_c(condition, Replicate, sep = " - ")]
+
+  p <- ggplot(samples.coord, aes(x = Dim.1, y=Dim.2, colour=condition, fill=condition, label=Run)) +
+    stat_ellipse(geom = "polygon", alpha=0.1) +
+    geom_point(size = 3, alpha = 0.7) +
+    theme_minimal() +
+    scale_x_continuous(str_c("PCA 1 - ", eig.val[dims == "Dim.1", round(variance.percent,1)], "%")) +
+    scale_y_continuous(str_c("PCA 2 - ", eig.val[dims == "Dim.2", round(variance.percent,1)], "%")) +
+    ggtitle(str_c("PCA plot using the ", length(DE_ids), " differencially expressed peptides"))
+  ggplotly(p, tooltip = c("label")) %>% config(displayModeBar = F)
+
+}
+
+```
+
+
+## B. Quantitative values CV distributions {.tabset .tabset-fade .tabset-pills}
+
+### Proteins
+
+```{r, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
+cvdt <- prot_int[Imputed == 0][, countRep := .N, by = .(id, condition)]
+cvdt[, countRepMax := max(countRep), by = .(id, condition)]
+cvdt[, ReplicatePC := countRep/countRepMax]
+cvdt[, intensity := as.double(intensity)]
+cvdt <- cvdt[ReplicatePC >= 0.5, .(cv = sd(intensity)/mean(intensity)), by = .(id, condition)]
+
+ggplotly(ggplot(cvdt, aes(x=cv, fill=condition, colour=condition)) +
+  geom_density(alpha=0.4) +
+  theme_minimal() +
+  scale_x_continuous("% CV", labels = scales::percent) +
+  ggtitle("Proteins - LFQ intensity CV")) %>% config(displayModeBar = F)
+```
+
+
+### Modification specific peptides
+
+```{r, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
+cvdt <- mod_pept_int[Imputed == 0][, countRep := .N, by = .(id, condition)]
+cvdt[, countRepMax := max(countRep), by = .(id, condition)]
+cvdt[, ReplicatePC := countRep/countRepMax]
+cvdt[, intensity := as.double(intensity)]
+cvdt <- cvdt[ReplicatePC >= 0.5, .(cv = sd(intensity)/mean(intensity)), by = .(id, condition)]
+
+p <- ggplot(cvdt, aes(x=cv, fill=condition, colour=condition)) +
+  geom_density(alpha=0.4) +
+  theme_minimal() +
+  scale_x_continuous("% CV", labels = scales::percent) +
+  ggtitle("Modification specific peptides - intensity CV")
+ggplotly(p) %>% config(displayModeBar = F)
+```
+
+
+### Peptides
+
+```{r, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
+cvdt <- pept_int[Imputed == 0][, countRep := .N, by = .(id, condition)]
+cvdt[, countRepMax := max(countRep), by = .(id, condition)]
+cvdt[, ReplicatePC := countRep/countRepMax]
+cvdt[, intensity := as.double(intensity)]
+cvdt <- cvdt[ReplicatePC >= 0.5, .(cv = sd(intensity)/mean(intensity)), by = .(id, condition)]
+
+p <- ggplot(cvdt, aes(x=cv, fill=condition, colour=condition)) +
+  geom_density(alpha=0.4) +
+  theme_minimal() +
+  scale_x_continuous("% CV", labels = scales::percent) +
+  ggtitle("Peptide - LFQ intensity CV")
+ggplotly(p) %>% config(displayModeBar = F)
+```
+
+
+## B. Sample and Intensity Correlation Plots {.tabset .tabset-fade .tabset-pills}
+
+### Proteins
+
+```{r, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
+
+filenames <- prot_int[!(is.na(file_name)), unique(run_id)]
+
+int_corr_dt <- dcast.data.table(
+  prot_int[Imputed == 0],
+  id ~ condition + Replicate,
+  value.var = "log2NInt",
+  sep = "_"
+)
+DT_corMatrix <- rcorr(as.matrix(int_corr_dt[, 2:ncol(int_corr_dt)]))
+DT_corMatrix <- DT_corMatrix$r
+DT_corMatrix[DT_corMatrix <= -1] = -1
+DT_corMatrix[DT_corMatrix >= 1] = 1
+#corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix", tl.cex = 0.5, mar = c(1,0,1.5,0))
+if (num_files > 10) {
+  corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix", tl.cex = 0.5, mar = c(1,0,1.5,0))
+
+} else {
+  corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix", tl.cex = 0.5, mar = c(1,0,1.5,0), addCoef.col = "white", number.cex = .5)
+
+}
+
+name_of_column <- colnames(prot)[colnames(prot) == "adj.P.Val"]
+if (!identical(name_of_column, character(0)) && mod_pept[get(name_of_column) <= 0.05, .N] > 4) {
+  # DE_ids <- prot[get(name_of_column) <= 0.05, unique(ProteinGroupId)]
+  DE_ids <- prot[get(name_of_column) <= 0.05, unique(id)]
+  int_corr_dt <- int_corr_dt[id %in% DE_ids]
+  DT_corMatrix <- rcorr(as.matrix(int_corr_dt[, 2:ncol(int_corr_dt)]))
+  DT_corMatrix <- DT_corMatrix$r
+
+  DT_corMatrix[DT_corMatrix <= -1] = -1
+  DT_corMatrix[DT_corMatrix >= 1] = 1
+
+  if (num_files > 10) {
+    corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix - DE peptides", tl.cex = 0.5, mar = c(1,0,1.5,0))
+
+  } else {
+    corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix - DE peptides", tl.cex = 0.5, mar = c(1,0,1.5,0), addCoef.col = "white", number.cex = .5)
+
+  }
+}
+
+
+if (length(filenames) > 4) {
+  filenames <- sample(filenames, 4)
+}
+
+int_corr_dt <- dcast.data.table(
+  prot_int[run_id %in% filenames & Imputed == 0],
+  id ~ condition + Replicate,
+  value.var = "log2NInt",
+  sep = "_"
+)
+
+myplot <- function(data, mapping, ...) {
+  ggplot(data=data, mapping=mapping) +
+  geom_point(size = 1, alpha = 0.3, colour = "skyblue2") +
+  theme_minimal()
+}
+p <- ggpairs(int_corr_dt, columns = colnames(int_corr_dt)[2:ncol(int_corr_dt)],
+        upper = list(
+    continuous = myplot
+  ),
+  lower = "blank",
+  diag = NULL
+  )
+p
+```
+
+
+### Modification specific peptides
+
+```{r, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
+
+filenames <- mod_pept_int[!(is.na(file_name)), unique(run_id)]
+
+int_corr_dt <- dcast.data.table(
+  mod_pept_int[Imputed == 0],
+  id ~ condition + Replicate,
+  value.var = "log2NInt",
+  sep = "_"
+)
+DT_corMatrix <- rcorr(as.matrix(int_corr_dt[, 2:ncol(int_corr_dt)]))
+DT_corMatrix <- DT_corMatrix$r
+DT_corMatrix[DT_corMatrix <= -1] = -1
+DT_corMatrix[DT_corMatrix >= 1] = 1
+#corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix", tl.cex = 0.5, mar = c(1,0,1.5,0))
+if (num_files > 10) {
+  corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix", tl.cex = 0.5, mar = c(1,0,1.5,0))
+
+} else {
+  corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix", tl.cex = 0.5, mar = c(1,0,1.5,0), addCoef.col = "white", number.cex = .5)
+
+}
+
+name_of_column <- colnames(mod_pept)[colnames(mod_pept) == "adj.P.Val"]
+if (!identical(name_of_column, character(0)) && mod_pept[get(name_of_column) <= 0.05, .N] > 4) {
+  # DE_ids <- prot[get(name_of_column) <= 0.05, unique(ProteinGroupId)]
+  DE_ids <- mod_pept[get(name_of_column) <= 0.05, unique(id)]
+  int_corr_dt <- int_corr_dt[id %in% DE_ids]
+  DT_corMatrix <- rcorr(as.matrix(int_corr_dt[, 2:ncol(int_corr_dt)]))
+  DT_corMatrix <- DT_corMatrix$r
+
+  DT_corMatrix[DT_corMatrix <= -1] = -1
+  DT_corMatrix[DT_corMatrix >= 1] = 1
+
+  if (num_files > 10) {
+    corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix - DE peptides", tl.cex = 0.5, mar = c(1,0,1.5,0))
+
+  } else {
+    corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix - DE peptides", tl.cex = 0.5, mar = c(1,0,1.5,0), addCoef.col = "white", number.cex = .5)
+
+  }
+}
+
+
+if (length(filenames) > 4) {
+  filenames <- sample(filenames, 4)
+}
+
+int_corr_dt <- dcast.data.table(
+  mod_pept_int[run_id %in% filenames & Imputed == 0],
+  id ~ condition + Replicate,
+  value.var = "log2NInt",
+  sep = "_"
+)
+
+myplot <- function(data, mapping, ...) {
+  ggplot(data=data, mapping=mapping) +
+  geom_point(size = 1, alpha = 0.3, colour = "skyblue2") +
+  theme_minimal()
+}
+p <- ggpairs(int_corr_dt, columns = colnames(int_corr_dt)[2:ncol(int_corr_dt)],
+        upper = list(
+    continuous = myplot
+  ),
+  lower = "blank",
+  diag = NULL
+  )
+p
+```
+
+
+### Peptides
+
+```{r, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
+
+filenames <- pept_int[!(is.na(file_name)), unique(run_id)]
+
+int_corr_dt <- dcast.data.table(
+  pept_int[Imputed == 0],
+  id ~ condition + Replicate,
+  value.var = "log2NInt",
+  sep = "_"
+)
+DT_corMatrix <- rcorr(as.matrix(int_corr_dt[, 2:ncol(int_corr_dt)]))
+DT_corMatrix <- DT_corMatrix$r
+DT_corMatrix[DT_corMatrix <= -1] = -1
+DT_corMatrix[DT_corMatrix >= 1] = 1
+#corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix", tl.cex = 0.5, mar = c(1,0,1.5,0))
+if (num_files > 10) {
+  corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix", tl.cex = 0.5, mar = c(1,0,1.5,0))
+
+} else {
+  corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix", tl.cex = 0.5, mar = c(1,0,1.5,0), addCoef.col = "white", number.cex = .5)
+
+}
+
+name_of_column <- colnames(pept)[colnames(pept) == "adj.P.Val"]
+if (!identical(name_of_column, character(0)) && mod_pept[get(name_of_column) <= 0.05, .N] > 4) {
+  # DE_ids <- prot[get(name_of_column) <= 0.05, unique(ProteinGroupId)]
+  DE_ids <- pept[get(name_of_column) <= 0.05, unique(id)]
+  int_corr_dt <- int_corr_dt[id %in% DE_ids]
+  DT_corMatrix <- rcorr(as.matrix(int_corr_dt[, 2:ncol(int_corr_dt)]))
+  DT_corMatrix <- DT_corMatrix$r
+
+  DT_corMatrix[DT_corMatrix <= -1] = -1
+  DT_corMatrix[DT_corMatrix >= 1] = 1
+
+  if (num_files > 10) {
+    corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix - DE peptides", tl.cex = 0.5, mar = c(1,0,1.5,0))
+
+  } else {
+    corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix - DE peptides", tl.cex = 0.5, mar = c(1,0,1.5,0), addCoef.col = "white", number.cex = .5)
+
+  }
+}
+
+
+if (length(filenames) > 4) {
+  filenames <- sample(filenames, 4)
+}
+
+int_corr_dt <- dcast.data.table(
+  pept_int[run_id %in% filenames & Imputed == 0],
+  id ~ condition + Replicate,
+  value.var = "log2NInt",
+  sep = "_"
+)
+
+myplot <- function(data, mapping, ...) {
+  ggplot(data=data, mapping=mapping) +
+  geom_point(size = 1, alpha = 0.3, colour = "skyblue2") +
+  theme_minimal()
+}
+p <- ggpairs(int_corr_dt, columns = colnames(int_corr_dt)[2:ncol(int_corr_dt)],
+        upper = list(
+    continuous = myplot
+  ),
+  lower = "blank",
+  diag = NULL
+  )
+p
+```
+
+# 2. Feature Completeness
+
+## A. Data completeness {.tabset .tabset-fade .tabset-pills}
+
+### Proteins
+```{r, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
+
+
+dt <- unique(prot_int[Imputed == 0, .(ReplicatePC = .N/num_files), by = .(id)])
+
+ymax <- max(dt[, .N, by = .(ReplicatePC)][, N])
+ymax <- 0.01 * ymax + ymax
+
+p <- ggplot(dt, aes(x = ReplicatePC)) +
+  annotate('rect', xmin = 0.7, xmax = 1.05, ymin = 0, ymax = ymax, alpha=0.2)  +
+  geom_histogram(binwidth = max(0.1, round(1/max(num_files), 2)), fill="skyblue2") +
+  theme_minimal() +
+  scale_x_continuous("Percentage of measurements per protein", labels = scales::percent, limits = c(0, 1.15), breaks = seq(0, 1, 0.1)) +
+  annotate('text', x = 0.5, y = 0.8*ymax, label=str_c("Number of proteins with\nmissing values <= 30%:\n ", dt[ReplicatePC >= 0.7, .N]))
+ggplotly(p, tooltip = c("y")) %>% config(displayModeBar = F)
+
+dt <- prot_int[Imputed == 0, .(`% measured values` = .N/prot_int[, length(unique(id))]), by = .(run_id, condition, Replicate)]
+dt[, Run := str_c(condition, Replicate, sep = " - ")]
+
+dt[, `% measured values` := 100*(round(`% measured values`, 2))]
+
+p<- ggplot(dt, aes(x = `% measured values`, y = 1,  fill=condition, colour=condition, label=Run)) +
+  geom_bar(colour="lightgray", stat="identity")+
+  theme_minimal() +
+  scale_x_continuous("Percentage of measurements per LC-MS run", labels = function(x){paste(x, "%", sep = "")}, limits = c(-0.1, 100.1), breaks = seq(0, 100, 10)) +
+  scale_y_continuous("Count")
+
+ggplotly(p, tooltip = c("label", "x")) %>% config(displayModeBar = F)
+
+
+
+```
+
+
+### Modification specific peptides
+```{r, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
+
+
+dt <- unique(mod_pept_int[Imputed == 0, .(ReplicatePC = .N/num_files), by = .(id)])
+
+ymax <- max(dt[, .N, by = .(ReplicatePC)][, N])
+ymax <- 0.01 * ymax + ymax
+
+p <- ggplot(dt, aes(x = ReplicatePC)) +
+  annotate('rect', xmin = 0.7, xmax = 1.05, ymin = 0, ymax = ymax, alpha=0.2)  +
+  geom_histogram(binwidth = max(0.1, round(1/max(num_files), 2)), fill="skyblue2") +
+  theme_minimal() +
+  scale_x_continuous("Percentage of measurements per peptide", labels = scales::percent, limits = c(0, 1.15), breaks = seq(0, 1, 0.1)) +
+  annotate('text', x = 0.5, y = 0.8*ymax, label=str_c("Number of peptides with\nmissing values <= 30%:\n ", dt[ReplicatePC >= 0.7, .N]))
+ggplotly(p, tooltip = c("y")) %>% config(displayModeBar = F)
+
+dt <- mod_pept_int[Imputed == 0, .(`% measured values` = .N/mod_pept_int[, length(unique(id))]), by = .(run_id, condition, Replicate)]
+dt[, Run := str_c(condition, Replicate, sep = " - ")]
+
+dt[, `% measured values` := 100*(round(`% measured values`, 2))]
+
+p<- ggplot(dt, aes(x = `% measured values`, y = 1,  fill=condition, colour=condition, label=Run)) +
+  geom_bar(colour="lightgray", stat="identity")+
+  theme_minimal() +
+  scale_x_continuous("Percentage of measurements per LC-MS run", labels = function(x){paste(x, "%", sep = "")}, limits = c(-0.1, 100.1), breaks = seq(0, 100, 10)) +
+  scale_y_continuous("Count")
+
+ggplotly(p, tooltip = c("label", "x")) %>% config(displayModeBar = F)
+
+
+
+```
+
+
+### Peptides
+```{r, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
+
+
+dt <- unique(pept_int[Imputed == 0, .(ReplicatePC = .N/num_files), by = .(id)])
+
+ymax <- max(dt[, .N, by = .(ReplicatePC)][, N])
+ymax <- 0.01 * ymax + ymax
+
+p <- ggplot(dt, aes(x = ReplicatePC)) +
+  annotate('rect', xmin = 0.7, xmax = 1.05, ymin = 0, ymax = ymax, alpha=0.2)  +
+  geom_histogram(binwidth = max(0.1, round(1/max(num_files), 2)), fill="skyblue2") +
+  theme_minimal() +
+  scale_x_continuous("Percentage of measurements per peptide", labels = scales::percent, limits = c(0, 1.15), breaks = seq(0, 1, 0.1)) +
+  annotate('text', x = 0.5, y = 0.8*ymax, label=str_c("Number of peptides with\nmissing values <= 30%:\n ", dt[ReplicatePC >= 0.7, .N]))
+ggplotly(p, tooltip = c("y")) %>% config(displayModeBar = F)
+
+dt <- pept_int[Imputed == 0, .(`% measured values` = .N/pept_int[, length(unique(id))]), by = .(run_id, condition, Replicate)]
+dt[, Run := str_c(condition, Replicate, sep = " - ")]
+
+dt[, `% measured values` := 100*(round(`% measured values`, 2))]
+
+p<- ggplot(dt, aes(x = `% measured values`, y = 1,  fill=condition, colour=condition, label=Run)) +
+  geom_bar(colour="lightgray", stat="identity") +
+  theme_minimal() +
+  scale_x_continuous("Percentage of measurements per LC-MS run", labels = function(x){paste(x, "%", sep = "")}, limits = c(-0.1, 100.1), breaks = seq(0, 100, 10)) +
+  scale_y_continuous("Count")
+
+ggplotly(p, tooltip = c("label", "x")) %>% config(displayModeBar = F)
+
+
+
+```
+
+
+# 3 Sample preparation
+
+## Digestion efficiency
+
+```{r, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
+dt <- copy(evidence)
+
+setnames(dt, "experiment", "condition")
+dt[is.na(condition), condition := "Library"]
+dt[condition == "Library" & is.na(Replicate), Replicate := .GRP, by = .(`raw file`)]
+
+if ("fraction" %in% colnames(dt) && dt[, any(fraction > 0, na.rm = T)]) {
+  dt <- dt[, .(count = .N), by = .(`missed cleavages`, condition, Replicate, fraction, `raw file`)]
+  dt[, Run := str_c(condition, Replicate, fraction, sep = " - ")]
+
+} else {
+  dt <- dt[, .(count = .N), by = .(`missed cleavages`, condition, Replicate, `raw file`)]
+  dt[, Run := str_c(condition, Replicate, sep = " - ")]
+
+}
+dt[, `missed cleavages` := as.factor(`missed cleavages`)]
+
+ggplot(dt, aes(x = Run, y = count,  fill=`missed cleavages`, label=Run)) +
+  geom_bar(stat="identity", position=position_fill(reverse = TRUE)) + 
+  theme_minimal() +
+  scale_y_continuous("% missed cleavages", labels = scales::percent) +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.2),
+        panel.grid.major.y = element_blank(),
+        panel.border = element_blank(),
+        axis.ticks.y = element_blank()
+        )
+
+```
+
+
+# 4. Identifications
+
+## A. Counts {.tabset .tabset-fade .tabset-pills}
+
+### Proteins
+
+#### With intensity values - from proteinGroups.txt
+```{r, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
+dt <- copy(prot_int[Imputed == 0])
+
+dt[is.na(condition), condition := "Library"]
+
+if ("fraction" %in% colnames(dt) && dt[, any(fraction > 0)]) {
+dt <- dt[, .N, by = .(condition, Replicate, fraction)]
+dt[, Run := str_c(condition, Replicate, fraction, sep = " - ")]
+
+} else {
+dt <- dt[, .N, by = .(condition, Replicate)]
+dt[, Run := str_c(condition, Replicate, sep = " - ")]
+
+}
+
+g <- ggplot(dt, aes(x = as.factor(Run), y = N, color = condition, label=Replicate)) +
+  geom_segment( aes(x=as.factor(Run), xend=as.factor(Run), y=0, yend=N), color="skyblue") +
+  geom_point(size=2, alpha=0.9) +
+  coord_flip() +
+  theme_minimal() +
+  scale_x_discrete("LC-MS run") +
+  scale_y_continuous("# PSMs") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.2),
+        panel.grid.major.y = element_blank(),
+        panel.border = element_blank(),
+        axis.ticks.y = element_blank()
+        )
+ggplotly(g, tooltip = c("label", "y"))
+
+```
+
+#### all - from evidence.txt
+```{r, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
+dt <- copy(evidence)
+
+setnames(dt, "experiment", "condition")
+dt[is.na(condition), condition := "Library"]
+dt[condition == "Library" & is.na(Replicate), Replicate := .GRP, by = .(`raw file`)]
+
+
+if ("fraction" %in% colnames(dt) && dt[, any(fraction > 0, na.rm = T)]) {
+dt <- unique(dt[, .(`leading razor protein`, condition, Replicate, fraction, `raw file`)])[, .N, by = .(condition, Replicate, fraction, `raw file`)]
+dt[, Run := str_c(condition, Replicate, fraction, sep = " - ")]
+
+} else {
+dt <- unique(dt[, .(`leading razor protein`, condition, Replicate,  `raw file`)])[, .N, by = .(condition, Replicate, `raw file`)]
+dt[, Run := str_c(condition, Replicate, sep = " - ")]
+
+}
+
+g <- ggplot(dt, aes(x = as.factor(Run), y = N, color = condition, label=`raw file`)) +
+  geom_segment( aes(x=as.factor(Run), xend=as.factor(Run), y=0, yend=N), color="skyblue") +
+  geom_point(size=2, alpha=0.9) +
+  coord_flip() +
+  theme_minimal() +
+  scale_x_discrete("LC-MS run") +
+  scale_y_continuous("# PSMs") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.2),
+        panel.grid.major.y = element_blank(),
+        panel.border = element_blank(),
+        axis.ticks.y = element_blank()
+        )
+ggplotly(g, tooltip = c("label", "y"))
+
+```
+
+
+### Modifiication specific peptides
+
+#### all - from evidence.txt
+```{r, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
+#dt <- merge(msms, unique(feature_quant_dt[, .(file_name, condition, Replicate)]), by = "file_name", all.x = T)
+dt <- copy(evidence)
+
+
+setnames(dt, "experiment", "condition")
+dt[is.na(condition), condition := "Library"]
+dt[condition == "Library" & is.na(Replicate), Replicate := .GRP, by = .(`raw file`)]
+
+
+if ("fraction" %in% colnames(dt) && dt[, any(fraction > 0, na.rm = T)]) {
+dt <- unique(dt[, .(sequence, modifications, condition, Replicate, fraction, `raw file`)])[, .N, by = .(condition, Replicate, fraction, `raw file`)]
+dt[, Run := str_c(condition, Replicate, fraction, sep = " - ")]
+
+} else {
+dt <- unique(dt[, .(sequence, modifications, condition, Replicate, `raw file`)])[, .N, by = .(condition, Replicate, `raw file`)]
+dt[, Run := str_c(condition, Replicate, sep = " - ")]
+
+}
+
+g<- ggplot(dt, aes(x = as.factor(Run), y = N, color = condition, label=`raw file`)) +
+  geom_segment( aes(x=as.factor(Run), xend=as.factor(Run), y=0, yend=N), color="skyblue") +
+  geom_point(size=2, alpha=0.9) +
+  coord_flip() +
+  theme_minimal() +
+  scale_x_discrete("LC-MS run") +
+  scale_y_continuous("# Modified Sequences") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.2),
+        panel.grid.major.y = element_blank(),
+        panel.border = element_blank(),
+        axis.ticks.y = element_blank()
+        )
+ggplotly(g, tooltip = c("label", "y"))
+
+```
+
+#### With intensity values - from modificationSpecificPeptides.txt
+```{r, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
+dt <- copy(mod_pept_int[Imputed == 0])
+
+dt[is.na(condition), condition := "Library"]
+
+
+if ("fraction" %in% colnames(dt) && dt[, any(fraction > 0, na.rm = T)]) {
+dt <- dt[, .N, by = .(condition, Replicate, fraction)]
+dt[, Run := str_c(condition, Replicate, fraction, sep = " - ")]
+
+} else {
+dt <- dt[, .N, by = .(condition, Replicate)]
+dt[, Run := str_c(condition, Replicate, sep = " - ")]
+
+}
+
+g <- ggplot(dt, aes(x = as.factor(Run), y = N, color = condition, label=Replicate)) +
+  geom_segment( aes(x=as.factor(Run), xend=as.factor(Run), y=0, yend=N), color="skyblue") +
+  geom_point(size=2, alpha=0.9) +
+  coord_flip() +
+  theme_minimal() +
+  scale_x_discrete("LC-MS run") +
+  scale_y_continuous("# Modified Sequences") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.2),
+        panel.grid.major.y = element_blank(),
+        panel.border = element_blank(),
+        axis.ticks.y = element_blank()
+        )
+ggplotly(g, tooltip = c("label", "y"))
+
+```
+
+
+### Peptides
+
+#### all - from evidence.txt
+```{r, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
+
+dt <- copy(evidence)
+
+setnames(dt, "experiment", "condition")
+dt[is.na(condition), condition := "Library"]
+dt[condition == "Library" & is.na(Replicate), Replicate := .GRP, by = .(`raw file`)]
+
+
+if ("fraction" %in% colnames(dt) && dt[, any(fraction > 0, na.rm = T)]) {
+dt <- unique(dt[, .(sequence, condition, Replicate, fraction, `raw file`)])[, .N, by = .(condition, Replicate, fraction, `raw file`)]
+dt[, Run := str_c(condition, Replicate, fraction, sep = " - ")]
+
+} else {
+dt <- unique(dt[, .(sequence, condition, Replicate, `raw file`)])[, .N, by = .(condition, Replicate, `raw file`)]
+dt[, Run := str_c(condition, Replicate, sep = " - ")]
+
+}
+
+g <- ggplot(dt, aes(x = as.factor(Run), y = N, color = condition, label=`raw file`)) +
+  geom_segment( aes(x=as.factor(Run), xend=as.factor(Run), y=0, yend=N), color="skyblue") +
+  geom_point(size=2, alpha=0.9) +
+  coord_flip() +
+  theme_minimal() +
+  scale_x_discrete("LC-MS run") +
+  scale_y_continuous("# Peptide Sequences") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.2),
+        panel.grid.major.y = element_blank(),
+        panel.border = element_blank(),
+        axis.ticks.y = element_blank()
+        )
+ggplotly(g, tooltip = c("label", "y"))
+
+```
+
+#### With intensity values - from peptides.txt
+```{r, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
+dt <- copy(pept_int[Imputed == 0])
+
+dt[is.na(condition), condition := "Library"]
+
+if ("fraction" %in% colnames(dt) && dt[, any(fraction > 0, na.rm = T)]) {
+dt <- dt[, .N, by = .(condition, Replicate, fraction)]
+dt[, Run := str_c(condition, Replicate, fraction, sep = " - ")]
+
+} else {
+dt <- dt[, .N, by = .(condition, Replicate)]
+dt[, Run := str_c(condition, Replicate, sep = " - ")]
+
+}
+
+g <- ggplot(dt, aes(x = as.factor(Run), y = N, color = condition, label=Replicate)) +
+  geom_segment( aes(x=as.factor(Run), xend=as.factor(Run), y=0, yend=N), color="skyblue") +
+  geom_point(size=2, alpha=0.9) +
+  coord_flip() +
+  theme_minimal() +
+  scale_x_discrete("LC-MS run") +
+  scale_y_continuous("# PSMs") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.2),
+        panel.grid.major.y = element_blank(),
+        panel.border = element_blank(),
+        axis.ticks.y = element_blank()
+        )
+ggplotly(g, tooltip = c("label", "y"))
+
+
+```
+
+
+### PSMs
+```{r, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
+dt <- copy(msms)
+setnames(dt, "experiment", "condition")
+
+# check if there are any files in the msms.txt not included in the experiment design
+dt[is.na(condition), condition := "Library"]
+dt[condition == "Library" & is.na(Replicate), Replicate := .GRP, by = .(`raw file`)]
+
+
+if ("fraction" %in% colnames(dt) && dt[, any(fraction > 0, na.rm = T)]) {
+dt <- dt[, .N, by = .(condition, Replicate, fraction, `raw file`)]
+dt[, Run := str_c(condition, Replicate, fraction, sep = " - ")]
+
+} else {
+dt
+dt <- dt[, .N, by = .(condition, Replicate, `raw file`)]
+dt[, Run := str_c(condition, Replicate, sep = " - ")]
+
+}
+
+g <- ggplot(dt, aes(x = as.factor(Run), y = N, color = condition, label=`raw file`)) +
+  geom_segment( aes(x=as.factor(Run), xend=as.factor(Run), y=0, yend=N), color="skyblue") +
+  geom_point(size=2, alpha=0.9) +
+  coord_flip() +
+  theme_minimal() +
+  scale_x_discrete("LC-MS run") +
+  scale_y_continuous("# PSMs") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.2),
+        panel.grid.major.y = element_blank(),
+        panel.border = element_blank(),
+        axis.ticks.y = element_blank()
+        )
+ggplotly(g, tooltip = c("label", "y"))
+```
+
+
