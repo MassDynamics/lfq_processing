@@ -1,2 +1,2 @@
-# maxquant-quant-analysis-public
+# lfq_proceessing
 Quantitative analysis of maxquant results
