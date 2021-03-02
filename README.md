@@ -58,7 +58,9 @@ JD_06232014_sample4_C|3|sample4|4_C
 
 Where the column __file_name__ contains the names of the LC-MS/MS runs in the data, the column __experiment__ contains the experimental conditions, the column __replicate__ is a unique number for each of the biological or technical replicate in one experimental contition, the column __mqExperiment__ contains the values in the "Experiment" column in the Maxquant "Raw data" tab when setting up the Maxquant analysis (figure below).
 
-![Maxquant experimental set up. Each "File" has to be associated to a unique value in the "Experiment" column](/home/peppe/maxquant-quant-analysis-public/Maxquant_setup.png) 
+
+![Maxquant experimental set up. Each "File" has to be associated to a unique value in the "Experiment" column](http://github.com/MassDynamics/lfq_processing/blob/main/MQ_Example_setup.png)
+
 
 --- 
 ## Quantitative analysis
