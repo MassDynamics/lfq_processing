@@ -1,5 +1,6 @@
-limma_stats_fun <- function(ID_type, 
-                            int_type, 
+#' @export
+limma_stats_fun <- function(ID_type,
+                            int_type,
                             condition_col_name,
                             run_id_col_name,
                             rep_col_name,
@@ -19,13 +20,19 @@ limma_stats_fun <- function(ID_type,
   # all.comparisons = TRUE
   # fix_distr = FALSE
   # pairwise.comp = NULL # pairwisecom
-
+  
+  
+  #
   # pairwise.comp <- data.table(
   #   left = c('12AS_NMPP1', "13AS_NMPP1", "D2AS_NMPP1", "WT_NMPP1"),
   #   right = c("12AS_DMSO", "13AS_DMSO", "D2AS_DMSO", "WT_DMSO")
   # )
-  # 
+  #
   
+  #
+  # NOT IMPLEMENTED YET
+  # all.comparisons <- TRUE # if true it will test all pairwise comparisons
+  #
   if (all.comparisons) {
     comination_mat <- combn(x = funDT[, unique(get(condition_col_name))], 2)
     pairwise.comp <- foreach (i = 1:ncol(comination_mat)) %do% {
@@ -165,8 +172,13 @@ limma_stats_fun <- function(ID_type,
       myContrasts = NULL
       left <- pairwise.comp[ipair, left]
       right <- pairwise.comp[ipair, right]
+      
+      condition.seperator = " - "
+      
       myContrasts = c(myContrasts,
-                      str_c("condition", left, " - ", "condition", right))
+                      str_c("condition", left, condition.seperator, 
+                            "condition", right))
+      
       contrast.matrix <- eval(as.call(c(
         as.symbol("makeContrasts"),
         as.list(myContrasts),
@@ -195,14 +207,19 @@ limma_stats_fun <- function(ID_type,
       stats <- merge(stats, s_dt, by = "ID", all = T)
     }
     
-   
+    
   }
   
   
- 
   
+  pairwise.comp = assembleComparisonConditionMapping(pairwise.comp,
+                                                     condition.seperator)
   
   stats[, ID := str_replace_all(ID, "ID.", "")]
   setnames(stats, "ID", ID_type)
-  return(stats)
+  
+  
+  
+  return(list(stats = stats,
+              pairwise.comp = pairwise.comp))
 }
