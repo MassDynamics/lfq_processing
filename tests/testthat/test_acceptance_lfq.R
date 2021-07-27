@@ -1,10 +1,8 @@
 library(LFQProcessing)
 library(testthat)
 
-data("example_lfq_her2_targetted_therapy")
-
 # Run Code
-current_her2 =  lfq_transformer(ma_tables = mq_tables,
+current_her2 =  lfq_transformer(ma_tables = example_lfq_her2_targetted_therapy_tables,
                                 output_folder = "./tmp",
                                 imputeStDev=0.3,
                                 imputePosition=1.8)

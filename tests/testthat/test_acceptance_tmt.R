@@ -13,10 +13,8 @@ acceptance_test<- function(current, expected,
   
 }
 
-data("example_tmt_PXD019880")
-
-current_tmt <- tmt_transformer(protein_groups,
-                               des,
+current_tmt <- tmt_transformer(protein_groups_tmt_PXD019880,
+                               des_tmt_PXD019880,
                                "./tmp",
                                imputeStDev=0.3,
                                imputePosition=1.8)
