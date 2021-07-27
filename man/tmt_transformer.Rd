@@ -5,18 +5,19 @@
 \title{Run Pairwise Protein Quantification on each level of TMT Maxquant output}
 \usage{
 tmt_transformer(
-  mq_folder,
+  protein_groups,
+  des,
   output_folder,
   imputeStDev = 0.3,
   imputePosition = 1.8
 )
 }
 \arguments{
-\item{mq_folder}{A maxquant txt output folder.}
-
 \item{output_folder}{An output folder to store produced files.}
 
 \item{imputePosition}{The Position parameter for MNAR Imputation}
+
+\item{mq_folder}{A maxquant txt output folder.}
 
 \item{imputStDev}{The Standard Deviation parameter for MNAR Imputation}
 }

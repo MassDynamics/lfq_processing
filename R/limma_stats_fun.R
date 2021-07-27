@@ -1,4 +1,12 @@
+#' This function performs the differential expression analysis with limma including all pairwise comparisons 
+#' using the condition provided
+
 #' @export
+#' @import limma
+#' @import foreach
+#' @import Biobase 
+#' @importFrom stringr str_order str_c str_sort
+#' @importFrom data.table rbindlist dcast.data.table as.data.table
 limma_stats_fun <- function(ID_type,
                             int_type,
                             condition_col_name,
@@ -43,12 +51,6 @@ limma_stats_fun <- function(ID_type,
     }
     pairwise.comp <- rbindlist(pairwise.comp)
   }
-  
-  
-  library(Biobase)
-  library(limma)
-  library(data.table)
-  #library(qvalue)
   
   funDT <- funDT[str_order(get(run_id_col_name), numeric = T)]
   funDT[, ID := str_c("ID.", get(ID_type))]
@@ -102,13 +104,13 @@ limma_stats_fun <- function(ID_type,
   # Create ExpressionSet object
   eset <- ExpressionSet(
     assayData = int_matrix,
-    phenoData = AnnotatedDataFrame(sample_dt),
-    featureData = AnnotatedDataFrame(feature_dt)
+    phenoData = Biobase::AnnotatedDataFrame(sample_dt),
+    featureData = Biobase::AnnotatedDataFrame(feature_dt)
   )
   
   
   design.mat <- model.matrix(~ 0 + condition,
-                             data = pData(eset))
+                             data = Biobase::pData(eset))
   myContrasts = NULL
   for (irow in 1:pairwise.comp[, .N]) {
     left <- pairwise.comp[irow, left]
@@ -131,7 +133,7 @@ limma_stats_fun <- function(ID_type,
   # fix_distr <- TRUE
   if (fix_distr) {
     for (exper.cond in pairwise.comp[, c(left, right)]) {
-      Runs <- pData(eset)[pData(eset)$condition == exper.cond, "run_id"]
+      Runs <- Biobase::pData(eset)[Biobase::pData(eset)$condition == exper.cond, "run_id"]
       i <- which(rowSums(isZ[,colnames(isZ) %in% Runs]) == length(Runs))
       eset_fix <- exprs(eset[i,])
       eset_fix[,colnames(isZ) %in% Runs] <- NA
@@ -166,7 +168,7 @@ limma_stats_fun <- function(ID_type,
       
       
       design.mat <- model.matrix(~ 0 + condition,
-                                 data = pData(eset_pair))
+                                 data = Biobase::pData(eset_pair))
       
       
       myContrasts = NULL

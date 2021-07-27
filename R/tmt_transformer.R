@@ -21,7 +21,7 @@
 #' evidence = tmp[[8]]
 #' msms = tmp[[9]]
 #'
-#' @imports data.table
+#' @import data.table
 #' @export tmt_transformer
 tmt_transformer <- function(protein_groups, des, output_folder, imputeStDev=0.3, imputePosition=1.8) {
   

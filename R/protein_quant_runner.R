@@ -2,10 +2,8 @@
 #' @param folder A maxquant txt output folder.
 #' @param output_folder An output folder to store produced files.
 #' @return A string describing the type of experiment
-#' @example
-#' protein_quant_runner("../data/iPRG2015/txt/",
-#'  "../data/iPRG2015/txt/transform")
-#' @imports data.table
+#' @example protein_quant_runner("../data/iPRG2015/txt/", "../data/iPRG2015/txt/transform")
+#' @import data.table
 #' @export protein_quant_runner
 protein_quant_runner <- function(upload_folder, output_folder) {
   

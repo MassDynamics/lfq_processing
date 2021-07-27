@@ -5,18 +5,18 @@
 \title{Run Pairwise Protein Quantification on each level of LFQ Maxquant output}
 \usage{
 lfq_transformer(
-  mq_folder,
+  ma_tables,
   output_folder,
   imputeStDev = 0.3,
   imputePosition = 1.8
 )
 }
 \arguments{
-\item{mq_folder}{A maxquant txt output folder.}
-
 \item{output_folder}{An output folder to store produced files.}
 
 \item{imputePosition}{The Position parameter for MNAR Imputation}
+
+\item{mq_folder}{A maxquant txt output folder.}
 
 \item{imputStDev}{The Standard Deviation parameter for MNAR Imputation}
 }

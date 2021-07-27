@@ -21,7 +21,7 @@
 #' evidence = tmp[[8]]
 #' msms = tmp[[9]]
 #'
-#' @imports data.table
+#' @import data.table
 #' @export lfq_transformer
 lfq_transformer <- function(ma_tables, output_folder, imputeStDev=0.3, imputePosition=1.8) {
   
