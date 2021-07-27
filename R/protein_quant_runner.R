@@ -21,7 +21,10 @@ protein_quant_runner <- function(upload_folder, output_folder) {
   # hacky solution to avoid refactoring LFQ for now.
   if (experiment_type == "LFQ"){
     start_time <- Sys.time()
-    tmp =  lfq_transformer(mq_folder = upload_folder,
+    
+    ma_tables <- lfq_read_data(upload_folder, experiment_type)
+    
+    tmp =  lfq_transformer(ma_tables = ma_tables,
                            output_folder = output_folder,
                            imputeStDev=0.3,
                            imputePosition=1.8)
@@ -53,7 +56,14 @@ protein_quant_runner <- function(upload_folder, output_folder) {
   } else if (experiment_type == "LABEL"){
     
     start_time <- Sys.time()
-    tmp <- tmt_transformer(upload_folder,
+    
+    protein_groups <- tmt_proteinGroup_txt_reader(upload_folder)
+    des <- fread(file.path(upload_folder, "experimentDesign_original.txt"))
+    des$reporter_channel <- as.character(des$reporter_channel)
+    verify_tmt_des(des)
+    
+    tmp <- tmt_transformer(protein_groups,
+                           des,
                            output_folder,
                            imputeStDev=0.3,
                            imputePosition=1.8)

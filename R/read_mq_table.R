@@ -1,15 +1,15 @@
 #' @import data.table
 #' @export lfq_read_data
 lfq_read_data <- function(upload_folder, experiment_type) {
-
+  
   # read experiment design
   expdes_list <- experiment_design_reader(upload_folder)
   expdes <- expdes_list[[1]]
   conditions_dict <- expdes_list[[2]]
-
-
+  
+  
   cat('Reading Tables\n')
-
+  
   # msms.txt
   msms <- msms_txt_reader(upload_folder, expdes)
   # proteinGroups.txt
@@ -20,15 +20,15 @@ lfq_read_data <- function(upload_folder, experiment_type) {
   mod_pept <- lfq_modificationSpecificPeptides_txt_reader(upload_folder, expdes)
   # evidence.txt
   evidence <- evidence_txt_reader(upload_folder, expdes)
-
+  
   return(list(
-    msms,
-    prot,
-    pept,
-    mod_pept,
-    evidence,
-    expdes,
-    conditions_dict
+    msms = msms,
+    prot = prot,
+    pept = pept,
+    mod_pept = mod_pept,
+    evidence = evidence,
+    expdes = expdes,
+    conditions_dict = conditions_dict
   ))
 }
 

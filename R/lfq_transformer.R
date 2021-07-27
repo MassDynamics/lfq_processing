@@ -23,7 +23,7 @@
 #'
 #' @imports data.table
 #' @export lfq_transformer
-lfq_transformer <- function(mq_folder, output_folder, imputeStDev=0.3, imputePosition=1.8) {
+lfq_transformer <- function(ma_tables, output_folder, imputeStDev=0.3, imputePosition=1.8) {
   
   checkBy <- 'Experiment'
   
@@ -32,14 +32,14 @@ lfq_transformer <- function(mq_folder, output_folder, imputeStDev=0.3, imputePos
   
   
   # read data
-  ma_tables <- lfq_read_data(mq_folder, experiment_type)
-  msms <- ma_tables[[1]]
-  prot <- ma_tables[[2]]
-  pept <- ma_tables[[3]]
-  mod_pept <- ma_tables[[4]]
-  evidence <- ma_tables[[5]]
-  expdes <- ma_tables[[6]]
-  conditions_dict <- ma_tables[[7]]
+  
+  msms <- ma_tables$msms
+  prot <- ma_tables$prot
+  pept <- ma_tables$pept
+  mod_pept <- ma_tables$mod_pept
+  evidence <- ma_tables$evidence
+  expdes <- ma_tables$expdes
+  conditions_dict <- ma_tables$conditions_dict
   
   # Deal with data aggregated over fractions already
   if (length(unique(expdes$file_name))>length(unique(expdes$mqExperiment))){
@@ -103,4 +103,3 @@ remove_fracs_files_from_des <- function(expdes){
   expdes[,file_name := NULL]
   expdes <- unique(expdes[,list(mqExperiment, experiment, Replicate)])
 }
-

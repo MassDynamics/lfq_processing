@@ -23,15 +23,9 @@
 #'
 #' @imports data.table
 #' @export tmt_transformer
-tmt_transformer <- function(mq_folder, output_folder, imputeStDev=0.3, imputePosition=1.8) {
+tmt_transformer <- function(protein_groups, des, output_folder, imputeStDev=0.3, imputePosition=1.8) {
   
   dir.create(output_folder, showWarnings = FALSE)
-  
-  protein_groups <- tmt_proteinGroup_txt_reader(mq_folder)
-  
-  des <- fread(file.path(mq_folder, "experimentDesign_original.txt"))
-  des$reporter_channel <- as.character(des$reporter_channel)
-  verify_tmt_des(des)
   
   protein_groups <- remove_not_annotated_channels(protein_groups, des)
   
