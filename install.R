@@ -1,5 +1,9 @@
 #!/usr/bin/Rscript
 
+
+install.packages("devtools")
+library(devtools)
+
 ensure_package_installed <- function (package, repos = repos) {
   if(!require(package, character.only=TRUE)) {
     install.packages(package, repos = repos)
