@@ -23,12 +23,13 @@ ensure_package_installed_with_version <- function (package, version, repos = rep
 }
 
 
-
-ensure_package_installed("devtools", repos = list("http://cran.rstudio.com/", "https://cran.ms.unimelb.edu.au/"))
 ensure_package_installed("grDevices", repos = list("http://cran.rstudio.com/", "https://cran.ms.unimelb.edu.au/"))
+ensure_package_installed("devtools", repos = list("http://cran.rstudio.com/", "https://cran.ms.unimelb.edu.au/"))
 
 install.packages("githubinstall", repos = "http://cran.rstudio.com/")
 githubinstall::gh_install_packages("sjmgarnier/viridis", ask = FALSE)
+
+ensure_package_installed_with_version("rlang", "0.4.10",repos = "http://cran.rstudio.com/")
 
 ensure_package_installed("parallel", repos = "http://cran.rstudio.com/")
 ensure_package_installed("doParallel", repos = "http://cran.rstudio.com/")
