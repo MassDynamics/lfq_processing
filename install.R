@@ -6,22 +6,22 @@ ensure_package_installed <- function (package, repos = repos) {
     library(package, character.only=TRUE)
   }
 }
-# 
-# ensure_package_installed_with_version <- function (package, version, repos = repos) {
-#   if(!require(package, character.only=TRUE)) {
-#     install_version(package, version = version, repos = repos)
-#     library(package, character.only=TRUE)
-#   } else if (packageVersion(package) != version) {
-#     install_version(package, version = version, repos = repos)
-#     library(package, character.only=TRUE)
-#   }
-#   
-#   if(packageVersion(package) != version) {
-#     stop("issue with: ", package, " ", version)
-#   }
-#   
-# }
-# 
+
+ensure_package_installed_with_version <- function (package, version, repos = repos) {
+  if(!require(package, character.only=TRUE)) {
+    install_version(package, version = version, repos = repos)
+    library(package, character.only=TRUE)
+  } else if (packageVersion(package) != version) {
+    install_version(package, version = version, repos = repos)
+    library(package, character.only=TRUE)
+  }
+
+  if(packageVersion(package) != version) {
+    stop("issue with: ", package, " ", version)
+  }
+
+}
+
 # 
 # ensure_package_installed("grDevices", repos = list("http://cran.rstudio.com/", "https://cran.ms.unimelb.edu.au/"))
 # ensure_package_installed("devtools", repos = list("http://cran.rstudio.com/", "https://cran.ms.unimelb.edu.au/"))
@@ -82,6 +82,8 @@ ensure_package_installed <- function (package, repos = repos) {
 #   stop("BiocManager is not valid")
 # }
 
+
+ensure_package_installed_with_version("BiocManager", '1.30.16', repos = "http://cran.rstudio.com/")
 install.packages("renv")
 
 renv::restore()
