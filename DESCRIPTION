@@ -1,6 +1,6 @@
 Package: LFQProcessing
 Title: Processes Proteomics Files for Quantification.
-Version: 0.0.33
+Version: 0.0.35
 Authors@R:
     person(given = "Giuseppe",
            family = "Infusini",
