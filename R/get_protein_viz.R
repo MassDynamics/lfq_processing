@@ -4,8 +4,6 @@
 #' @param prot_int a protein intensities table
 #' @param output_folder a folder to write the json file into
 #' @return Writes a json object to the output folder
-#' @examples
-#' get_protein_viz(prot, prot_int, "../datasets/iPRG2015/transform")
 #' @import jsonlite
 #' @export get_protein_viz
 get_protein_viz <- function(prot, prot_int, output_folder, conditionComparisonMapping){

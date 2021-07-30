@@ -15,6 +15,3 @@ A string describing the type of experiment
 \description{
 Detect Experiment Type
 }
-\examples{
-detect_exp_type("../data/iPRG2015/txt/")
-}

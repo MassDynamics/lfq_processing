@@ -42,6 +42,7 @@ a list containing the quantitative results first and intentisty results second.
 Run Pairwise Protein Quantification on a level of LFQ Maxquant output
 }
 \examples{
+\dontrun{
 #producing results per modified peptide id
 mod_pep_list <- lfq_quant_analysis(mod_pept, expdes, id_var = "id", output_folder,
  "modificationSpecificPeptides_quant.txt",
@@ -52,4 +53,5 @@ mod_pep_list <- lfq_quant_analysis(mod_pept, expdes, id_var = "id", output_folde
 
 mod_pept <- mod_pep_list[[1]]
 mod_pept_int <- mod_pep_list[[2]]
+}
 }

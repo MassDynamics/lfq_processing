@@ -8,13 +8,6 @@
 #' @param f_imputStDev The Standard Deviation parameter for MNAR Imputation
 #' @param f_imputePosition The Position parameter for MNAR Imputation
 #' @return quantification data with missing values imputed
-#' @examples
-#'  dt_int <- impute_lfq(myQuantDT = dt_int,
-#'  id_type = "id",
-#'  int_type = "log2NInt", #log2Intensity
-#'  0.3,
-#'  1.8,
-#'  )
 #' @export impute_lfq
 impute_lfq <- function(myQuantDT,
                        id_type,

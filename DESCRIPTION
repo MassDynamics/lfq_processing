@@ -1,11 +1,9 @@
 Package: LFQProcessing
 Title: Processes Proteomics Files for Quantification.
-Version: 0.0.37
-Authors@R:
-    person(given = "Giuseppe",
-           family = "Infusini",
-           role = c("aut", "cre"),
-           email = "peppe@massdynamics.com")
+Version: 0.0.38
+Author: Joseph Bloom <joseph@massdynamics.com> and
+      Giuseppe Infusini <peppe@massdynamics.com> 
+Maintainer: The package maintainer <joseph@massdynamics.com>
 Description: Processes Proteomics Files for Quantification.
 License: use_mit_license()
 Encoding: UTF-8
@@ -45,5 +43,8 @@ Imports:
   statmod,
   bit64,
   snow,
-  tinytex
+  tinytex,
+  Biobase
+Suggests: 
+  testthat (>= 3.0.0)
 VignetteBuilder: knitr

@@ -11,6 +11,7 @@
 #' @param imputePosition The Position parameter for MNAR Imputation
 #' @return a list containing the quantitative results first and intentisty results second.
 #' @examples
+#' \dontrun{
 #' #producing results per modified peptide id
 #' mod_pep_list <- lfq_quant_analysis(mod_pept, expdes, id_var = "id", output_folder,
 #'  "modificationSpecificPeptides_quant.txt",
@@ -21,6 +22,7 @@
 #'
 #' mod_pept <- mod_pep_list[[1]]
 #' mod_pept_int <- mod_pep_list[[2]]
+#' }
 #' @export lfq_quant_analysis
 lfq_quant_analysis <- function(dt, des, id_var, output_folder, quant_fn, dt_int_fn,
                                conditions_dict=conditions_dict,

@@ -28,6 +28,7 @@ A string describing the type of experiment
 Run Pairwise Protein Quantification on each level of TMT Maxquant output
 }
 \examples{
+\dontrun{
 tmp =  tmt_transformer(mq_folder = upload_folder,
  output_folder = output_folder,
  imputeStDev=0.3,
@@ -42,5 +43,5 @@ mod_pept_int = tmp[[6]]
 expdes = tmp[[7]]
 evidence = tmp[[8]]
 msms = tmp[[9]]
-
+}
 }

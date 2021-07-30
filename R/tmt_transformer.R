@@ -6,6 +6,7 @@
 #' @param imputePosition The Position parameter for MNAR Imputation
 #' @return A string describing the type of experiment
 #' @examples
+#' \dontrun{
 #' tmp =  tmt_transformer(mq_folder = upload_folder,
 #'  output_folder = output_folder,
 #'  imputeStDev=0.3,
@@ -20,7 +21,7 @@
 #' expdes = tmp[[7]]
 #' evidence = tmp[[8]]
 #' msms = tmp[[9]]
-#'
+#' }
 #' @import data.table
 #' @export tmt_transformer
 tmt_transformer <- function(protein_groups, des, output_folder, imputeStDev=0.3, imputePosition=1.8) {

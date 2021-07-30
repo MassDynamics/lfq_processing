@@ -29,11 +29,3 @@ quantification data with missing values imputed
 \description{
 This function does MNAR imputation
 }
-\examples{
- dt_int <- impute_lfq(myQuantDT = dt_int,
- id_type = "id",
- int_type = "log2NInt", #log2Intensity
- 0.3,
- 1.8,
- )
-}

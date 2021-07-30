@@ -3,8 +3,6 @@
 #' @param des An experiment design table
 #' @param output_folder A folder to write output files to.
 #' @return Writes output files to the output folder
-#' @examples
-#' phospho_enrichment_quant(upload_folder, expdes, output_folder)
 #' @export
 phospho_enrichment_quant <- function(upload_folder, des, output_folder) {
 

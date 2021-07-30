@@ -6,6 +6,7 @@
 #' @param imputePosition The Position parameter for MNAR Imputation
 #' @return A string describing the type of experiment
 #' @examples
+#' \dontrun{
 #' tmp =  lfq_transformer(mq_folder = upload_folder,
 #'  output_folder = output_folder,
 #'  imputeStDev=0.3,
@@ -20,7 +21,7 @@
 #' expdes = tmp[[7]]
 #' evidence = tmp[[8]]
 #' msms = tmp[[9]]
-#'
+#' }
 #' @import data.table
 #' @export lfq_transformer
 lfq_transformer <- function(ma_tables, output_folder, imputeStDev=0.3, imputePosition=1.8) {

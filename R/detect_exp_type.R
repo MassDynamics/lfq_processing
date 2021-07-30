@@ -2,8 +2,6 @@
 #'
 #' @param folder A maxquant txt output folder
 #' @return A string describing the type of experiment
-#' @examples
-#' detect_exp_type("../data/iPRG2015/txt/")
 #' @export detect_exp_type
 detect_exp_type <- function(folder){
   con <- file(file.path(folder, "proteinGroups.txt"),"r")

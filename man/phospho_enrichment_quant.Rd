@@ -19,6 +19,3 @@ Writes output files to the output folder
 \description{
 Run Phosphosite Quantification on each level of Maxquant output
 }
-\examples{
-phospho_enrichment_quant(upload_folder, expdes, output_folder)
-}

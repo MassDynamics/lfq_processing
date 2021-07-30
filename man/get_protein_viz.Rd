@@ -19,6 +19,3 @@ Writes a json object to the output folder
 \description{
 Print a Protein Visualization JSON file.
 }
-\examples{
-get_protein_viz(prot, prot_int, "../datasets/iPRG2015/transform")
-}
