@@ -90,7 +90,7 @@ ensure_package_installed_with_version <- function (package, version, repos = rep
 ensure_package_installed_with_version("BiocManager", '1.30.16', repos = "http://cran.rstudio.com/")
 install.packages("renv")
 
-renv::restore()
+renv::restore(library = '/usr/local/lib64/R/library/')
 
 
 sessionInfo()
