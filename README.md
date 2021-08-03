@@ -1,23 +1,29 @@
-# lfq_proceessing
-Quantitative analysis of maxquant results
+# LFQproceessing
 
-## Install required dependencies
+The LFQProcessing R package enables users to load and process the output of the [MaxQuant Computational Platform](https://www.maxquant.org/) for processing LC-MS/MS proteomics data. This package contains utilities for performing differential expression DE statistics and Quality Control reports. 
 
-To make sure all the required pachages are installed run the _install.R_ file in the parent folder of the cloned repo.
+A sister R package [MassExpression](www.massdynamics.com), provides the same utilities for a generic format, and will be the focus of future development.
 
-Assuming that git repository has benn cloned in the home directory and the application folder location is __/home/ubuntu/maxquant-quant-analysis-public__ then run:
+Both LFQProcessing and MassExpression were developed by [MassDynamics](www.massdynamics.com) to enable greater accessibility, reproducibility and insight into proteomics datasets and insights. All feedback is welcome. 
 
-```r
-app_folder = "/home/ubuntu/maxquant-quant-analysis-public/"
-source(file = file.path(app_folder, "install.R"))
+For more details please see our biorXiv paper: [Mass Dynamics 1.0: A streamlined, web-based environment for analyzing, sharing and integrating Label-Free Data](https://doi.org/10.1101/2021.03.03.433806).
+
+# Installation
+
+The latest release of LFQProcessing is installable using 
+
+```{r}
+install_github("MassDynamics/lfq_processing")
 ```
 
-___
+For further reproducibility. The package repository contains an renv.lock file that
+can be used to restore a working R 4.1.0 environment for running LFQProccesing by running
+`renv::restore()`
 
 
-## Set up enviroinment
+## Running LFQProcessing on your maxquant data.
 
-### Input folder setup
+### Retrieving data for running LFQProcessing.
 
 The first step is to assign variables that point to the location of the maxquant output files and to the cloned git repository.
 
@@ -62,53 +68,36 @@ Where the column __file_name__ contains the names of the LC-MS/MS runs in the da
 ![Maxquant experimental set up. Each "File" has to be associated to a unique value in the "Experiment" column](docs/MQ_Example_setup.png)
 Maxquant experimental set up. Each "File" has to be associated to a unique value in the "Experiment" column
 
+Save this file with the name "experimentDesign_original.txt" in your Maxquant .txt folder.
 
 --- 
+
 ## Quantitative analysis
 
-To load the main function into the enviroinment run:
+To run the quantitative analysis end-to end, all you need to do is write paths to your Maxquant .txt 
+and to an output folder where you would like to store the output. 
 
 ```r
-source(file = file.path(app_folder, "app/mq_transformer.R"))
+protein_quant_runner(maxquant_folder, output_folder)
+```
 
+## Example Data:
+
+Example data is provided with the package. To run this data you can use the following code:
+
+```{r}
+data("example_lfq_her2_targetted_therapy")
+
+# Run Code
+output =  lfq_transformer(ma_tables = example_lfq_her2_targetted_therapy_tables,
+                                 output_folder = "./sample_data_her/",
+                                 imputeStDev=0.3,
+                                 imputePosition=1.8)
+
+# output[[1]] is the protein level DE statistics. 
+# Make a Volcano Plot
+plot(output[[1]]$`logFC AZD8931_resistant_SKBR3_AZDRc - Parental_SKBR3`, 
+     -log10(output[[1]]$`P.Value AZD8931_resistant_SKBR3_AZDRc - Parental_SKBR3`))
 ```
 
 
-
-Set up a variable with the name of the experiment design file, the function assumes the files is located in the same folder of the Maxquant output
-
-```r
-experimentalDesign_filename <- "experimentDesign.txt"
-
-```
-
-
-
-Running the quantitative analysis:
-
-```r
-run_analysis <- mq_transfomer(
-    app_folder = app_folder, 
-    mq_folder = mq_folder, 
-    expdes_filename = experimentalDesign_filename
-)
-```
-
-
----
-
-#### Imputation parameters 
-
-Missing values imputation is done as described in the paper [here](www.massdynamics.com) 
-
-Imputation parameters can be changed by altering the default values in the __mq_transfomer__ function:
-
-```r
-run_analysis <- mq_transfomer(
-    app_folder = app_folder,
-    mq_folder = mq_folder, 
-    expdes_filename = experimentalDesign_filename,
-    mputeStDev = 0.3,
-    imputePosition = 1.8
-)
-```
