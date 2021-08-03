@@ -7,7 +7,6 @@ lfq_read_data <- function(upload_folder, experiment_type) {
   expdes <- expdes_list[[1]]
   conditions_dict <- expdes_list[[2]]
   
-  
   cat('Reading Tables\n')
   
   # msms.txt
@@ -22,19 +21,19 @@ lfq_read_data <- function(upload_folder, experiment_type) {
   evidence <- evidence_txt_reader(upload_folder, expdes)
   
   return(list(
-    msms = msms,
-    prot = prot,
-    pept = pept,
-    mod_pept = mod_pept,
-    evidence = evidence,
-    expdes = expdes,
-    conditions_dict = conditions_dict
+    msms,
+    prot,
+    pept,
+    mod_pept,
+    evidence,
+    expdes,
+    conditions_dict
   ))
 }
 
 experiment_design_reader <- function(folder) {
   expdes <- fread(file.path(folder, 'experimentDesign_original.txt'),
-                              stringsAsFactors = F, header = T, verbose = F)
+                  stringsAsFactors = F, header = T, verbose = F)
   setnames(expdes, "name", "file_name")
   expdes[, Replicate := bioRep]
   expdes[, `:=`(
@@ -43,11 +42,11 @@ experiment_design_reader <- function(folder) {
   )]
   expdes[, file_name := str_replace(file_name, ".raw", "")]
   expdes[, mqExperiment := tolower(mqExperiment)]
-
+  
   expdes_list <- condition_name_encoder(des=expdes)
   expdes <- expdes_list[[1]]
   conditions_dict <- expdes_list[[2]]
-
+  
   return(list(expdes, conditions_dict))
 }
 
@@ -70,14 +69,14 @@ generic_mq_table_reader <- function(folder, filename) {
   } else {
     return("File does not exist")
   }
-
+  
 }
 
 get_lfq_intensity_columns <- function(dt, des) {
   if (any(grepl("^intensity ", colnames(dt)))) {
     intensity_columns = str_c("intensity ",  des[, mqExperiment])
   }
-
+  
   if (any(grepl("^lfq intensity ", colnames(dt)))) {
     lfq_intensity_columns = str_c("lfq intensity ",  des[, mqExperiment])
     intensity_columns = c(intensity_columns, lfq_intensity_columns)
@@ -96,12 +95,14 @@ intensity_cols_to_double <- function(dt) {
 }
 
 msms_txt_reader <- function(folder, des) {
-
+  
   # DEBUG
   # folder = upload_folder
   # des = expdes
-
+  
   msms <- generic_mq_table_reader(folder, 'msms.txt')
+  msms$`raw file` <- as.character(msms$`raw file`)
+  
   if (!is.null(des)){ #merge if you have one
     msms <- merge(msms, des, by.x = "raw file", by.y = "file_name", all = T)
   }
@@ -114,18 +115,18 @@ lfq_proteinGroup_txt_reader <- function(folder, des) {
   # DEBUG
   # folder = upload_folder
   # des = expdes
-
+  
   dt <- generic_mq_table_reader(folder, 'proteinGroups.txt')
   intensity_columns = get_lfq_intensity_columns(dt, des)
-
+  
   columns_whitelist <- c("protein ids", "majority protein ids", "q-value", "score", "peptide counts (all)", "peptide counts (razor+unique)", "peptide counts (unique)", "fasta headers", "number of proteins", "peptides",
                          "razor + unique peptides", "unique peptides", "sequence coverage [%]", "unique + razor sequence coverage [%]", "unique sequence coverage [%]", "mol. weight [kda]", "sequence length",
                          "id", "peptide ids", "evidence ids", "ms/ms ids", "best ms/ms", intensity_columns
-                         )
-
+  )
+  
   dt <- dt[, columns_whitelist, with = FALSE]
   dt <- intensity_cols_to_double(dt)
-
+  
   return(dt)
 }
 
@@ -133,25 +134,25 @@ lfq_peptides_txt_reader <- function(folder, des) {
   # DEBUG
   # folder = upload_folder
   # des = expdes
-
+  
   dt <- generic_mq_table_reader(folder, 'peptides.txt')
-
+  
   intensity_columns = get_lfq_intensity_columns(dt, des)
-
+  
   # columns_whitelist <- c(
   #   "sequence", "amino acid before", "first amino acid", "second amino acid", "second last amino acid", "last amino acid", "amino acid after",
   #   "length", "missed cleavages", "mass", "proteins", "leading razor protein", "unique (groups)", "unique (proteins)", "charges", "pep", "score",
   #   "id", "protein group ids", "mod. peptide ids", "evidence ids", "ms/ms ids", "best ms/ms", "taxonomy ids",
   #   intensity_columns
   # )
-
+  
   columns_whitelist <- c(
     "sequence", "amino acid before", "amino acid after",
     "length", "missed cleavages", "mass", "proteins", "leading razor protein", "unique (groups)", "unique (proteins)", "charges", "pep", "score",
     "id", "protein group ids", "mod. peptide ids", "evidence ids", "ms/ms ids", "best ms/ms",
     intensity_columns
   )
-
+  
   dt <- dt[, columns_whitelist, with = FALSE]
   dt <- intensity_cols_to_double(dt)
   return(dt)
@@ -161,17 +162,17 @@ lfq_modificationSpecificPeptides_txt_reader <- function(folder, des) {
   # DEBUG
   # folder = upload_folder
   # des = expdes
-
+  
   dt <- generic_mq_table_reader(folder, 'modificationSpecificPeptides.txt')
   intensity_columns = get_lfq_intensity_columns(dt, des)
-
+  
   columns_whitelist <- c(
     "sequence", "modifications", "mass", "protein groups", "proteins", "unique (groups)", "unique (proteins)",
     "missed cleavages", "retention time", "calibrated retention time", "charges", "pep", "ms/ms scan number", "score", "delta score",
     "id", "protein group ids", "peptide id", "evidence ids", "ms/ms ids", "best ms/ms",
     intensity_columns
   )
-
+  
   dt <- dt[, columns_whitelist, with = FALSE]
   dt <- intensity_cols_to_double(dt)
   return(dt)
@@ -190,11 +191,13 @@ evidence_txt_reader <- function(folder, des) {
     "pif", "fraction of total spectrum", "base peak fraction", "pep", "ms/ms count", "ms/ms scan number", "score", "delta score",
     "intensity", "id", "protein group ids", "peptide id", "mod. peptide id", "ms/ms ids", "best ms/ms"
   )
-
+  
   dt <- dt[, columns_whitelist, with = FALSE]
   setnames(dt, "experiment", "mqExperiment")
+  
+  dt$`raw file` <- as.character(dt$`raw file`)
   dt <- merge(dt, des, by.x = "raw file", by.y = "file_name", all = T)
-
+  
   dt <- intensity_cols_to_double(dt)
   return(dt)
 }
@@ -212,11 +215,12 @@ phospho_sty_reader <- function(folder, des) {
     "pif", "fraction of total spectrum", "base peak fraction", "pep", "ms/ms count", "ms/ms scan number", "score", "delta score",
     "intensity", "id", "protein group ids", "peptide id", "mod. peptide id", "ms/ms ids", "best ms/ms"
   )
-
+  
   dt <- dt[, columns_whitelist, with = FALSE]
   setnames(dt, "experiment", "mqExperiment")
+  dt$`raw file` <- as.character(dt$`raw file`)
   dt <- merge(dt, des, by.x = "raw file", by.y = "file_name", all = T)
-
+  
   dt <- intensity_cols_to_double(dt)
   return(dt)
 }
@@ -225,7 +229,7 @@ phospho_sty_reader <- function(folder, des) {
 
 #' @export tmt_proteinGroup_txt_reader
 tmt_proteinGroup_txt_reader <- function(upload_folder){
-
+  
   proteinGroups <- generic_mq_table_reader(upload_folder, 'proteinGroups.txt')
   proteinGroups$id <- as.character(proteinGroups$id)
   return(proteinGroups)
