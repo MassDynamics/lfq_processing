@@ -679,66 +679,81 @@ int_corr_dt <- dcast.data.table(
   value.var = "log2NInt",
   sep = "_"
 )
-DT_corMatrix <- rcorr(as.matrix(int_corr_dt[, 2:ncol(int_corr_dt)]))
-DT_corMatrix <- DT_corMatrix$r
-DT_corMatrix[DT_corMatrix <= -1] = -1
-DT_corMatrix[DT_corMatrix >= 1] = 1
-#corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix", tl.cex = 0.5, mar = c(1,0,1.5,0))
-if (num_files > 10) {
-  corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix", tl.cex = 0.5, mar = c(1,0,1.5,0))
 
-} else {
-  corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix", tl.cex = 0.5, mar = c(1,0,1.5,0), addCoef.col = "white", number.cex = .5)
+# must have >4 observations for spearman correlation to run
+test = try(rcorr(as.matrix(int_corr_dt[, 2:ncol(int_corr_dt)])), silent = TRUE)
 
-}
-
-name_of_column <- colnames(prot)[colnames(prot) == "adj.P.Val"]
-if (!identical(name_of_column, character(0)) && mod_pept[get(name_of_column) <= 0.05, .N] > 4) {
-  # DE_ids <- prot[get(name_of_column) <= 0.05, unique(ProteinGroupId)]
-  DE_ids <- prot[get(name_of_column) <= 0.05, unique(id)]
-  int_corr_dt <- int_corr_dt[id %in% DE_ids]
+if (class(test) != "try-error") {
+  
   DT_corMatrix <- rcorr(as.matrix(int_corr_dt[, 2:ncol(int_corr_dt)]))
   DT_corMatrix <- DT_corMatrix$r
-
   DT_corMatrix[DT_corMatrix <= -1] = -1
   DT_corMatrix[DT_corMatrix >= 1] = 1
-
+  #corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix", tl.cex = 0.5, mar = c(1,0,1.5,0))
   if (num_files > 10) {
-    corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix - DE peptides", tl.cex = 0.5, mar = c(1,0,1.5,0))
-
+    corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix", tl.cex = 0.5, mar = c(1,0,1.5,0))
+    
   } else {
-    corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix - DE peptides", tl.cex = 0.5, mar = c(1,0,1.5,0), addCoef.col = "white", number.cex = .5)
-
+    corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix", tl.cex = 0.5, mar = c(1,0,1.5,0), addCoef.col = "white", number.cex = .5)
+    
   }
-}
-
-
-if (length(filenames) > 4) {
-  filenames <- sample(filenames, 4)
-}
-
-int_corr_dt <- dcast.data.table(
-  prot_int[run_id %in% filenames & Imputed == 0],
-  id ~ condition + Replicate,
-  value.var = "log2NInt",
-  sep = "_"
-)
-
-myplot <- function(data, mapping, ...) {
-  ggplot(data=data, mapping=mapping) +
-  geom_point(size = 1, alpha = 0.3, colour = "skyblue2") +
-  theme_minimal()
-}
-p <- ggpairs(int_corr_dt, columns = colnames(int_corr_dt)[2:ncol(int_corr_dt)],
-        upper = list(
-    continuous = myplot
-  ),
-  lower = "blank",
-  diag = NULL
+  
+  name_of_column <- colnames(prot)[colnames(prot) == "adj.P.Val"]
+  if (!identical(name_of_column, character(0)) && mod_pept[get(name_of_column) <= 0.05, .N] > 4) {
+    # DE_ids <- prot[get(name_of_column) <= 0.05, unique(ProteinGroupId)]
+    DE_ids <- prot[get(name_of_column) <= 0.05, unique(id)]
+    int_corr_dt <- int_corr_dt[id %in% DE_ids]
+    
+    test = try(rcorr(as.matrix(int_corr_dt[, 2:ncol(int_corr_dt)])), silent = TRUE)
+    
+    if (class(test) != "try-error"){
+      DT_corMatrix <- rcorr(as.matrix(int_corr_dt[, 2:ncol(int_corr_dt)]))
+      DT_corMatrix <- DT_corMatrix$r
+      
+      DT_corMatrix[DT_corMatrix <= -1] = -1
+      DT_corMatrix[DT_corMatrix >= 1] = 1
+      
+      if (num_files > 10) {
+        corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix - DE peptides", tl.cex = 0.5, mar = c(1,0,1.5,0))
+        
+      } else {
+        corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix - DE peptides", tl.cex = 0.5, mar = c(1,0,1.5,0), addCoef.col = "white", number.cex = .5)
+        
+      }
+    }
+  }
+  
+  
+  
+  
+  if (length(filenames) > 4) {
+    filenames <- sample(filenames, 4)
+  }
+  
+  int_corr_dt <- dcast.data.table(
+    prot_int[run_id %in% filenames & Imputed == 0],
+    id ~ condition + Replicate,
+    value.var = "log2NInt",
+    sep = "_"
   )
-p
-```
+  
+  myplot <- function(data, mapping, ...) {
+    ggplot(data=data, mapping=mapping) +
+      geom_point(size = 1, alpha = 0.3, colour = "skyblue2") +
+      theme_minimal()
+  }
+  p <- ggpairs(int_corr_dt, columns = colnames(int_corr_dt)[2:ncol(int_corr_dt)],
+               upper = list(
+                 continuous = myplot
+               ),
+               lower = "blank",
+               diag = NULL
+  )
+  p
+  
+} 
 
+```
 
 ### Modification specific peptides
 
@@ -756,64 +771,78 @@ int_corr_dt <- dcast.data.table(
   value.var = "log2NInt",
   sep = "_"
 )
-DT_corMatrix <- rcorr(as.matrix(int_corr_dt[, 2:ncol(int_corr_dt)]))
-DT_corMatrix <- DT_corMatrix$r
-DT_corMatrix[DT_corMatrix <= -1] = -1
-DT_corMatrix[DT_corMatrix >= 1] = 1
-#corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix", tl.cex = 0.5, mar = c(1,0,1.5,0))
-if (num_files > 10) {
-  corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix", tl.cex = 0.5, mar = c(1,0,1.5,0))
 
-} else {
-  corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix", tl.cex = 0.5, mar = c(1,0,1.5,0), addCoef.col = "white", number.cex = .5)
+test = try(rcorr(as.matrix(int_corr_dt[, 2:ncol(int_corr_dt)])), silent = TRUE)
 
-}
-
-name_of_column <- colnames(mod_pept)[colnames(mod_pept) == "adj.P.Val"]
-if (!identical(name_of_column, character(0)) && mod_pept[get(name_of_column) <= 0.05, .N] > 4) {
-  # DE_ids <- prot[get(name_of_column) <= 0.05, unique(ProteinGroupId)]
-  DE_ids <- mod_pept[get(name_of_column) <= 0.05, unique(id)]
-  int_corr_dt <- int_corr_dt[id %in% DE_ids]
+if (class(test) != "try-error") {
+  
+  
   DT_corMatrix <- rcorr(as.matrix(int_corr_dt[, 2:ncol(int_corr_dt)]))
   DT_corMatrix <- DT_corMatrix$r
-
   DT_corMatrix[DT_corMatrix <= -1] = -1
   DT_corMatrix[DT_corMatrix >= 1] = 1
-
+  #corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix", tl.cex = 0.5, mar = c(1,0,1.5,0))
   if (num_files > 10) {
-    corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix - DE peptides", tl.cex = 0.5, mar = c(1,0,1.5,0))
-
+    corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix", tl.cex = 0.5, mar = c(1,0,1.5,0))
+    
   } else {
-    corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix - DE peptides", tl.cex = 0.5, mar = c(1,0,1.5,0), addCoef.col = "white", number.cex = .5)
-
+    corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix", tl.cex = 0.5, mar = c(1,0,1.5,0), addCoef.col = "white", number.cex = .5)
+    
   }
-}
-
-
-if (length(filenames) > 4) {
-  filenames <- sample(filenames, 4)
-}
-
-int_corr_dt <- dcast.data.table(
-  mod_pept_int[run_id %in% filenames & Imputed == 0],
-  id ~ condition + Replicate,
-  value.var = "log2NInt",
-  sep = "_"
-)
-
-myplot <- function(data, mapping, ...) {
-  ggplot(data=data, mapping=mapping) +
-  geom_point(size = 1, alpha = 0.3, colour = "skyblue2") +
-  theme_minimal()
-}
-p <- ggpairs(int_corr_dt, columns = colnames(int_corr_dt)[2:ncol(int_corr_dt)],
-        upper = list(
-    continuous = myplot
-  ),
-  lower = "blank",
-  diag = NULL
+  
+  name_of_column <- colnames(mod_pept)[colnames(mod_pept) == "adj.P.Val"]
+  if (!identical(name_of_column, character(0)) && mod_pept[get(name_of_column) <= 0.05, .N] > 4) {
+    # DE_ids <- prot[get(name_of_column) <= 0.05, unique(ProteinGroupId)]
+    DE_ids <- mod_pept[get(name_of_column) <= 0.05, unique(id)]
+    int_corr_dt <- int_corr_dt[id %in% DE_ids]
+    
+    test = try(rcorr(as.matrix(int_corr_dt[, 2:ncol(int_corr_dt)])), silent = TRUE)
+    
+    if (class(test) != "try-error") {
+      DT_corMatrix <- rcorr(as.matrix(int_corr_dt[, 2:ncol(int_corr_dt)]))
+      DT_corMatrix <- DT_corMatrix$r
+      
+      DT_corMatrix[DT_corMatrix <= -1] = -1
+      DT_corMatrix[DT_corMatrix >= 1] = 1
+      
+      if (num_files > 10) {
+        corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix - DE peptides", tl.cex = 0.5, mar = c(1,0,1.5,0))
+        
+      } else {
+        corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix - DE peptides", tl.cex = 0.5, mar = c(1,0,1.5,0), addCoef.col = "white", number.cex = .5)
+        
+      }
+    }
+    
+  }
+  
+  
+  
+  if (length(filenames) > 4) {
+    filenames <- sample(filenames, 4)
+  }
+  
+  int_corr_dt <- dcast.data.table(
+    mod_pept_int[run_id %in% filenames & Imputed == 0],
+    id ~ condition + Replicate,
+    value.var = "log2NInt",
+    sep = "_"
   )
-p
+  
+  myplot <- function(data, mapping, ...) {
+    ggplot(data=data, mapping=mapping) +
+      geom_point(size = 1, alpha = 0.3, colour = "skyblue2") +
+      theme_minimal()
+  }
+  p <- ggpairs(int_corr_dt, columns = colnames(int_corr_dt)[2:ncol(int_corr_dt)],
+               upper = list(
+                 continuous = myplot
+               ),
+               lower = "blank",
+               diag = NULL
+  )
+  p
+}
 ```
 
 
@@ -833,64 +862,79 @@ int_corr_dt <- dcast.data.table(
   value.var = "log2NInt",
   sep = "_"
 )
-DT_corMatrix <- rcorr(as.matrix(int_corr_dt[, 2:ncol(int_corr_dt)]))
-DT_corMatrix <- DT_corMatrix$r
-DT_corMatrix[DT_corMatrix <= -1] = -1
-DT_corMatrix[DT_corMatrix >= 1] = 1
-#corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix", tl.cex = 0.5, mar = c(1,0,1.5,0))
-if (num_files > 10) {
-  corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix", tl.cex = 0.5, mar = c(1,0,1.5,0))
 
-} else {
-  corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix", tl.cex = 0.5, mar = c(1,0,1.5,0), addCoef.col = "white", number.cex = .5)
 
-}
+test = try(rcorr(as.matrix(int_corr_dt[, 2:ncol(int_corr_dt)])), silent = TRUE)
 
-name_of_column <- colnames(pept)[colnames(pept) == "adj.P.Val"]
-if (!identical(name_of_column, character(0)) && mod_pept[get(name_of_column) <= 0.05, .N] > 4) {
-  # DE_ids <- prot[get(name_of_column) <= 0.05, unique(ProteinGroupId)]
-  DE_ids <- pept[get(name_of_column) <= 0.05, unique(id)]
-  int_corr_dt <- int_corr_dt[id %in% DE_ids]
+if (class(test) != "try-error"){
+  
   DT_corMatrix <- rcorr(as.matrix(int_corr_dt[, 2:ncol(int_corr_dt)]))
   DT_corMatrix <- DT_corMatrix$r
-
   DT_corMatrix[DT_corMatrix <= -1] = -1
   DT_corMatrix[DT_corMatrix >= 1] = 1
-
+  #corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix", tl.cex = 0.5, mar = c(1,0,1.5,0))
   if (num_files > 10) {
-    corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix - DE peptides", tl.cex = 0.5, mar = c(1,0,1.5,0))
-
+    corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix", tl.cex = 0.5, mar = c(1,0,1.5,0))
+    
   } else {
-    corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix - DE peptides", tl.cex = 0.5, mar = c(1,0,1.5,0), addCoef.col = "white", number.cex = .5)
-
+    corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix", tl.cex = 0.5, mar = c(1,0,1.5,0), addCoef.col = "white", number.cex = .5)
+    
   }
-}
-
-
-if (length(filenames) > 4) {
-  filenames <- sample(filenames, 4)
-}
-
-int_corr_dt <- dcast.data.table(
-  pept_int[run_id %in% filenames & Imputed == 0],
-  id ~ condition + Replicate,
-  value.var = "log2NInt",
-  sep = "_"
-)
-
-myplot <- function(data, mapping, ...) {
-  ggplot(data=data, mapping=mapping) +
-  geom_point(size = 1, alpha = 0.3, colour = "skyblue2") +
-  theme_minimal()
-}
-p <- ggpairs(int_corr_dt, columns = colnames(int_corr_dt)[2:ncol(int_corr_dt)],
-        upper = list(
-    continuous = myplot
-  ),
-  lower = "blank",
-  diag = NULL
+  
+  name_of_column <- colnames(pept)[colnames(pept) == "adj.P.Val"]
+  if (!identical(name_of_column, character(0)) && mod_pept[get(name_of_column) <= 0.05, .N] > 4) {
+    # DE_ids <- prot[get(name_of_column) <= 0.05, unique(ProteinGroupId)]
+    DE_ids <- pept[get(name_of_column) <= 0.05, unique(id)]
+    int_corr_dt <- int_corr_dt[id %in% DE_ids]
+    
+    test = try(rcorr(as.matrix(int_corr_dt[, 2:ncol(int_corr_dt)])), silent = TRUE)
+    
+    if (class(test) != "try-error"){
+      DT_corMatrix <- rcorr(as.matrix(int_corr_dt[, 2:ncol(int_corr_dt)]))
+      DT_corMatrix <- DT_corMatrix$r
+      
+      DT_corMatrix[DT_corMatrix <= -1] = -1
+      DT_corMatrix[DT_corMatrix >= 1] = 1
+      
+      if (num_files > 10) {
+        corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix - DE peptides", tl.cex = 0.5, mar = c(1,0,1.5,0))
+        
+      } else {
+        corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix - DE peptides", tl.cex = 0.5, mar = c(1,0,1.5,0), addCoef.col = "white", number.cex = .5)
+        
+      }
+    }
+    
+  }
+  
+  
+  
+  
+  if (length(filenames) > 4) {
+    filenames <- sample(filenames, 4)
+  }
+  
+  int_corr_dt <- dcast.data.table(
+    pept_int[run_id %in% filenames & Imputed == 0],
+    id ~ condition + Replicate,
+    value.var = "log2NInt",
+    sep = "_"
   )
-p
+  
+  myplot <- function(data, mapping, ...) {
+    ggplot(data=data, mapping=mapping) +
+      geom_point(size = 1, alpha = 0.3, colour = "skyblue2") +
+      theme_minimal()
+  }
+  p <- ggpairs(int_corr_dt, columns = colnames(int_corr_dt)[2:ncol(int_corr_dt)],
+               upper = list(
+                 continuous = myplot
+               ),
+               lower = "blank",
+               diag = NULL
+  )
+  p
+}
 ```
 
 \newpage
@@ -1128,7 +1172,7 @@ if (output_format == "pdf"){
 
 \newpage
 
-# 3 Sample preparation
+# 3. Sample preparation
 
 ## Digestion efficiency
 

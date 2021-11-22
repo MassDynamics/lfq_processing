@@ -21,13 +21,13 @@ lfq_read_data <- function(upload_folder, experiment_type) {
   evidence <- evidence_txt_reader(upload_folder, expdes)
   
   return(list(
-    msms,
-    prot,
-    pept,
-    mod_pept,
-    evidence,
-    expdes,
-    conditions_dict
+    msms = msms,
+    prot = prot,
+    pept = pept,
+    mod_pept = mod_pept,
+    evidence = evidence,
+    expdes = expdes,
+    conditions_dict = conditions_dict
   ))
 }
 

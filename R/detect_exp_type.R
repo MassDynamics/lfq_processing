@@ -15,6 +15,9 @@ detect_exp_type <- function(folder){
     return("LFQ")
   } else if (grepl("Reporter",first_line, fixed = TRUE)){
     return("LABEL")
+  } else if (grepl("Intensity",first_line, fixed = TRUE)){
+    cat("Defaulting to LFQ without explicit LFQ column.")
+    return("LFQ")
   } else {
     return("Unknown - check experiment type manually.")
   }
