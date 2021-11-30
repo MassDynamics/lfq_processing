@@ -118,11 +118,11 @@ protein_quant_runner <- function(upload_folder, output_folder) {
   gc()
   
   #Write Protein Viz
-  print("Writing Protein Viz")
+  cat("Writing Protein Viz")
   start_time <- Sys.time()
   get_protein_viz(prot, prot_int, output_folder, conditionComparisonMapping)
   end_time <- Sys.time()
-  print(end_time - start_time)
+  cat(end_time - start_time)
   
   
 }
