@@ -12,8 +12,15 @@ protein_viz_is_correct <- function(){
                     "tmp/", 
                     protein_viz_test_data$conditionComparisonMapping)
     
-    expect_true(md5sum("tmp/protein_viz.json")==md5sum("../data/expected_protein_viz.json"))
-    expect_true(md5sum("tmp/protein_counts_and_intensity.json")==md5sum("../data/expected_protein_counts_and_intensity.json"))
+    
+    current = read_json("tmp/protein_viz.json")
+    expected = read_json("../data/expected_protein_viz.json")
+    expect_true(all.equal(current, expected))
+    
+    current = read_json("tmp/protein_counts_and_intensity.json")
+    expected = read_json("../data/expected_protein_counts_and_intensity.json")
+    expect_true(all.equal(current, expected))
+
   })
   
 }
