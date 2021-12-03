@@ -21,7 +21,9 @@ get_protein_viz <- function(prot, prot_int, output_folder, conditionComparisonMa
   cat(end_time-start_time)
 }
 
-# code for protein viz
+#' @param prot a processed proteinGroups table
+#' @param prot_int a protein intensities table
+#' @param output_folder a folder to write the json file into
 write_protein_viz <- function(prot, output_folder, conditionComparisonMapping){
   protein_viz = list()
   comparisons = conditionComparisonMapping$comparison.string
@@ -86,7 +88,13 @@ get_genes_from_id <- function(genes){
 }
 
 
-# code for protein counts and intensities 
+#' Write Protein counts and intensities json
+#' @param prot a processed proteinGroups table
+#' @param prot_int a protein intensities table
+#' @param output_folder a folder to write the json file into
+#' Columns required: `ProteinId`, `GeneName`, `Description`, `log2NInt`, `Condition`,
+#'  `Replicate`, `Imputed`, `ProteinQValue`, `ProteinScore`,  `FastaHeaders`. 
+#' @export oneProteinReplData
 writeReplicateData <- function(prot_int, prot, outputFolder){
   
   if ("ProteinGroupId" %in% colnames(prot_int)){
@@ -147,7 +155,7 @@ writeReplicateData <- function(prot_int, prot, outputFolder){
 #' Transform data for one protein from a long format to the nested data structure needed for the Replicates tab.
 #' @param oneProt data.table single protein information stored in long format. 
 #' Columns required: `ProteinId`, `GeneName`, `Description`, `log2NInt`, `Condition`,
-#'  `Replicate`, `Imputed`. 
+#'  `Replicate`, `Imputed`, `ProteinQValue`, `ProteinScore`,  `FastaHeaders`. 
 #' @export oneProteinReplData
 oneProteinReplData <- function(oneProt){
   infoProt <- unique(oneProt[,c("ProteinGroupId", "ProteinId","GeneName", "ProteinDescription",
