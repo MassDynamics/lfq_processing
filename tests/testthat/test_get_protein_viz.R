@@ -5,7 +5,7 @@ library(tools)
 
 protein_viz_is_correct <- function(){
   
-  test_that("Test Files outputted as expected", {
+  test_that("Test Files written as expected", {
     
     get_protein_viz(protein_viz_test_data$prot, 
                     protein_viz_test_data$prot_int, 
