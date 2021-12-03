@@ -117,6 +117,8 @@ protein_quant_runner <- function(upload_folder, output_folder) {
   
   gc()
   
+  save(prot, prot_int, conditionComparisonMapping, file = file.path(output_folder,"protein_data.rda"))
+  
   #Write Protein Viz
   cat("Writing Protein Viz")
   start_time <- Sys.time()
