@@ -8,239 +8,172 @@
 #' @export get_protein_viz
 get_protein_viz <- function(prot, prot_int, output_folder, conditionComparisonMapping){
   
-  # Fix TMT log2IntNorm Column name
-  if ("log2NIntNorm" %in% colnames(prot_int)){
-    prot_int$log2NInt <- prot_int$log2NIntNorm
-  }
+  cat("Writing Protein Viz Output")
+  start = Sys.time()
+  write_protein_viz(prot, output_folder, conditionComparisonMapping)
+  end = Sys.time()
+  cat(end-start)
   
-  ## === cleanUp info from fasta header ================
-  cl <- makeCluster(detectCores() - 1, type = "FORK")
-  
-  # For dev on windows.
-  #cl <- makeCluster(detectCores() - 1, type = "SOCK")
-  
-  registerDoParallel(cl)
-  
-  fasta_db <- prot[, .(`fasta headers`, id, `peptide counts (all)`, `protein ids`, `majority protein ids`)]
-  multiple_prot_index <- fasta_db[, grepl(";", `fasta headers`)] | fasta_db[, `fasta headers` == ""]
-  
-  multiple_prot_dt <- fasta_db[multiple_prot_index]
-  
-  fasta_headers <- foreach(dt_line = seq(1, multiple_prot_dt[, .N])) %do% {
-    dt <- multiple_prot_dt[dt_line]
-    # Fasta headers
-    dt_fasta_headers <- data.table(
-      id = dt[, id],
-      `fasta headers` = unlist(
-        str_split(dt[, `fasta headers`], ";")
-      ),
-      `majority protein ids` = unlist(
-        str_split(dt[, `majority protein ids`], ";")
-      )
-    )
-    # Protein ids
-    dt_protein_ids = data.table(
-      `protein ids` =  unlist(
-        str_split(dt[, `protein ids`], ";")
-      ),
-      `peptide counts (all)` =  as.integer(unlist(
-        str_split(dt[, `peptide counts (all)`], ";")
-      ))
-    )
-    dt_protein_ids <- dt_protein_ids[!grep("CON__", `protein ids`)]
-    dt_protein_ids <- dt_protein_ids[order(-`peptide counts (all)`)][1]
-    
-    if (dt_fasta_headers[`majority protein ids` %in% dt_protein_ids[, `protein ids`] & `fasta headers` != '', .N] > 0) {
-      dt_fasta_headers <- dt_fasta_headers[`majority protein ids` %in% dt_protein_ids[, `protein ids`] & `fasta headers` != '']
-    } else {
-      dt_fasta_headers[`fasta headers` == "", `fasta headers` := `majority protein ids`]
-      dt_fasta_headers <- data.table(id=dt_fasta_headers[, id][1], `fasta headers`=dt_fasta_headers[, `fasta headers`][1])
-      
-    }
-    
-    dt_fasta_headers[, id := as.integer(id)]
-    return(dt_fasta_headers[, .(id, `fasta headers`)])
-    
-  }
-  fasta_headers <- rbindlist(fasta_headers)
-  setnames(fasta_headers, "fasta headers", "fasta_headers")
-  
-  fasta_db <- fasta_db[!multiple_prot_index]
-  fasta_db[, fasta_headers := `fasta headers`]
-  
-  fasta_db <- rbindlist(list(fasta_db[, .(id, fasta_headers)], fasta_headers), use.names = T)
-  
-  fasta_db[, ProteinId := ""]
-  fasta_db[, gene_name := ""]
-  fasta_db[, protein_description := ""]
-  
-  prot <- merge(prot, fasta_db[, .(id, ProteinId, gene_name, protein_description, fasta_headers)], by = "id", all.x = T)
-  
-  
-  # Get name of columns and comparisons from protein table
-  adj_pval_cols <- grep("adj.P.Val", colnames(prot), value = TRUE)
-  adj_pval_cols <- adj_pval_cols[adj_pval_cols != "adj.P.Val"]
-  pval_cols <- grep("P.Value", colnames(prot), value = TRUE)
-  
-  comparisons <- str_remove(pattern = "P.Value ", string = pval_cols)
-  
-  adj_test_pre <- "adj.P.Val " # unique(str_extract(pattern = "adj.P.Val ", string = pval_cols))
-  test_pre <- "P.Value " # unique(str_extract(pattern = "adj.P.Val ", string = pval_cols))
-  
-  estimate_pre <- "logFC " # unique(str_extract(pattern = "logFC ", string = grep("logFC", colnames(prot), value = TRUE)))
-  confLow_pre <- "CI.L " # unique(str_extract(pattern = "PH.conf.low - |t.test conf.low - ", string = grep("conf.low", colnames(prot), value = TRUE)))
-  confHigh_pre <- "CI.R " # unique(str_extract(pattern = "PH.conf.high - |t.test conf.high - ", string = grep("conf.high", colnames(prot), value = TRUE)))
-  
-  FUN <- function(j, DT, comparison_pair) {
-    #debug
-    # j = 1
-    # DT = copy(dt)
-    # comparison_pair = comparison_pair
-    
-    ID_num <- DT[j, ProteinGroupId]
-    return(
-      list(
-        ProteinGroupId = ID_num,
-        ProteinId = DT[j, ProteinId],
-        GeneName = DT[j, gene_name],
-        ProteinDescription = DT[j, protein_description],
-        FastaHeaders = DT[j, FastaHeaders],
-        ProteinQValue = DT[j, ProteinQValue],
-        ProteinScore = DT[j, ProteinScore],
-        PValue = DT[j, PValue],
-        AdjustedPValue = DT[j, FDR],
-        FoldChange = DT[j, FoldChange],
-        ConfLow = DT[j, ConfLow],
-        ConfHigh = DT[j, ConfHigh]
-      )
-    )
-  }
-  
-  to_our <- list()
-  
-  #i = 1
-  for (i in 1:length(comparisons)) {
-    
-    pval_col = str_c(test_pre, comparisons[i])
-    adj_pval_col = str_c(adj_test_pre, comparisons[i])
-    estimate_col = str_c(estimate_pre, comparisons[i])
-    confLow_col = str_c(confLow_pre, comparisons[i])
-    confHigh_col = str_c(confHigh_pre, comparisons[i])
-    
-    dt <- copy(prot[, .(
-      ProteinGroupId = id,
-      ProteinId,
-      FastaHeaders = fasta_headers,
-      ProteinQValue = `q-value`,
-      ProteinScore = score,
-      PValue = get(pval_col),
-      FDR = get(adj_pval_col),
-      FoldChange = get(estimate_col),
-      ConfLow = get(confLow_col),
-      ConfHigh = get(confHigh_col),
-      gene_name,
-      protein_description
-      
-    )])
-    
-    
-    pc_fdr_limit <- dt[FDR <= 0.05, max(PValue, na.rm = T)]
-    
-    condition1 = getUpCondition(conditionComparisonMapping, comparisons[i])
-    condition2 = getDownCondition(conditionComparisonMapping, comparisons[i])
-    pair_wise_data_list <- parLapply(cl, 1:dt[, .N], FUN, DT=dt, 
-                                     comparison_pair=c(condition1, condition2))
-    
-    to_our[[i]] <- list(
-      conditionComparison = comparisons[i],
-      up.condition = condition1,
-      down.condition = condition2,
-      fdrLimit = pc_fdr_limit,
-      data = pair_wise_data_list
-    )
-    
-  }
-  write_json(to_our, path = file.path(output_folder, "protein_viz.json"), pretty = FALSE, auto_unbox = TRUE, digits = NA)
-  
-  ## ==== Replicate count by protein and condition ============
-  
-  # Calculate %Replicate per sample in Protein Intensity
-  if ("Replicate" %in% colnames(prot_int)){
-    setnames(prot_int, "Replicate", "replicate")
-  }
-  
-  num_eplicates_by_exp <- unique(prot_int[, .(condition, replicate)])[, .N, by = .(condition)]
-  prot_int[, ProteinGroupId := id]
-  replicate_count_pc <- prot_int[Imputed == 0, .(count = .N), by = .(ProteinGroupId, condition)]
-  replicate_count_pc <- merge(replicate_count_pc, num_eplicates_by_exp, by = "condition", all = T)
-  replicate_count_pc[, PrecentageOfReplicates := count/N]
-  
-  replicate_count_dt <- dcast.data.table(replicate_count_pc, ProteinGroupId ~ condition, value.var = "PrecentageOfReplicates", fill = 0)
-  replicate_count_dt <- melt.data.table(replicate_count_dt, id.vars = "ProteinGroupId", variable.name = "condition", value.name = "PrecentageOfReplicates")
-  replicate_count_dt <- merge(replicate_count_dt, replicate_count_pc[, .(condition, ProteinGroupId, count)], by = c("condition", "ProteinGroupId"))
-  replicate_count_dt[is.na(count), count := 0]
-  
-  replicate_count_dt <- merge(replicate_count_dt, prot[, .(ProteinGroupId = id,  ProteinQValue = `q-value`,
-                                                           ProteinScore = score)], by = "ProteinGroupId", all.x = T)
-  replicate_count_dt[, condition := as.character(condition)]
-  #replicate_count_dt[, ProteinId := as.integer(ProteinId)]
-  replicate_count_dt <- merge(replicate_count_dt, fasta_db, by.x = "ProteinGroupId", by.y = "id", all.x = T)
-  
-  prot_int <- prot_int[order(ProteinGroupId, condition, replicate)]
-  
-  replicate_count_dt_out <- foreach(id_n = replicate_count_dt[, unique(ProteinGroupId)]) %dopar% {
-    # id_n = 2
-    # dtn <- copy(replicate_count_dt)
-    # int_dt <- copy(prot_int)
-    dtn <- replicate_count_dt[ProteinGroupId == id_n]
-    
-    
-    get_intensity <- function(one_prot_condition_dt) {
-      # one_prot_condition_dt <- prot_int[ProteinGroupId == id_n & condition == "UPS1"]
-      int_list = foreach(line_i = 1:one_prot_condition_dt[, .N]) %do% {
-        return(
-          list(
-            replicateNum = one_prot_condition_dt[line_i, replicate],
-            centeredIntensity = one_prot_condition_dt[line_i, nRLE][[1]],
-            z_norm = one_prot_condition_dt[line_i, z_norm][[1]],
-            log2NInt_ProteinGroupId = one_prot_condition_dt[line_i, log2NInt],
-            Imputed = one_prot_condition_dt[line_i, Imputed]
-          )
-        )
-      }
-      return(int_list)
-    }
-    
-    condition_list = foreach (line_i = 1:dtn[, .N]) %do% {
-      # print(line_i)
-      # dtn[line_i]
-      int_list <- get_intensity(
-        prot_int[ProteinGroupId == dtn[line_i, ProteinGroupId] & condition == dtn[line_i, condition]]
-      )
-      return(
-        list(
-          name =  dtn[line_i, condition],
-          precentageOfReplicates = dtn[line_i, PrecentageOfReplicates],
-          numberOfReplicateCount = dtn[line_i, count],
-          intensityValues = int_list
-        )
-      )
-    }
-    
-    return(list(
-      ProteinGroupId = id_n,
-      ProteinId = dtn[, unique(ProteinId)],
-      GeneName = dtn[, unique(gene_name)],
-      ProteinDescription = dtn[, unique(protein_description)],
-      FastaHeaders = dtn[, unique(fasta_headers)],
-      ProteinQValue = dtn[, unique(ProteinQValue)],
-      ProteinScore = dtn[, unique(ProteinScore)],
-      conditions = condition_list
-    ))
-  }
-  
-  jsonlite::write_json(replicate_count_dt_out, path = file.path(output_folder, "protein_counts_and_intensity.json"),
-                       pretty = FALSE, auto_unbox = TRUE, digits = NA)
-  
+  cat("Writing Protein Counts and Intensities")
+  start_time <- Sys.time()
+  writeReplicateData(prot_int, prot, output_folder)
+  end_time <- Sys.time()
+  cat(end_time-start_time)
 }
 
+# code for protein viz
+write_protein_viz <- function(prot, output_folder, conditionComparisonMapping){
+  protein_viz = list()
+  comparisons = conditionComparisonMapping$comparison.string
+  i=1
+  for (comparison in comparisons){
+    fdrLimit = max(prot[prot[[str_c("adj.P.Val ",comparison)]] <= 0.05,][[str_c("P.Value ",comparison)]], na.rm = T)
+    
+    protein_viz[[i]] = list(
+      "conditionComparison" = unbox(comparison),
+      "up.condition" = unbox(getUpCondition(conditionComparisonMapping, comparison)),
+      "down.condition" = unbox(getDownCondition(conditionComparisonMapping, comparison)),
+      "fdrLimit" = fdrLimit,
+      "data" = prep_comparison_table(prot, comparison)
+    )
+    i = i+1
+  }
+  
+  write_json(protein_viz, file.path(output_folder, "protein_viz.json"),
+             pretty = FALSE, auto_unbox = TRUE, digits = NA, na = "string")
+}
+
+prep_comparison_table <- function(prot, comparison){
+  
+  # disambiguate, assume no contaminants
+  prot$Accession <- sapply(strsplit(prot$`majority protein ids`,";"), `[`, 1)
+  prot$Gene <- get_genes_from_id(prot$Accession)
+  prot$Accession_id <- str_extract(string = prot$Accession,
+                                   pattern = "[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}")
+  
+  prot$ProteinDescription = ""
+  # remove protein id and gene id so python can deal with it
+  prot$Accession_id = ""
+  prot$Gene = ""
+  
+  
+  # remove extra fasta headers
+  prot$`fasta headers` = sapply(strsplit(prot$`fasta headers`,";"), `[`, 1)
+  
+  cols <- c("id", "Accession_id", "Gene", "ProteinDescription","fasta headers", "q-value", "score",
+            str_c(c("P.Value ", "adj.P.Val ", "logFC ", "CI.L ","CI.R "), comparison))
+  
+  comparison_dt = prot[,..cols]
+  colnames(comparison_dt) <- c("ProteinGroupId", "ProteinId", "GeneName","ProteinDescription",
+                               "FastaHeaders", "ProteinQValue", "ProteinScore",
+                               "PValue", "AdjustedPValue", "FoldChange",
+                               "ConfLow","ConfHigh")
+  
+  comparison_dt
+}
+
+get_comparisons <- function(prot){
+  idx <- grep("logFC", colnames(prot))
+  logFC_cols <- colnames(prot)[idx]
+  comparisons <- gsub("logFC ","",logFC_cols)
+  return(comparisons)
+}
+
+get_genes_from_id <- function(genes){
+  genes <- gsub(".*\\|", "", genes)
+  genes <- gsub("_.*", "", genes)
+  genes
+}
+
+
+# code for protein counts and intensities 
+writeReplicateData <- function(prot_int, prot, outputFolder){
+  
+  if ("ProteinGroupId" %in% colnames(prot_int)){
+    if (!("id" %in% colnames(prot_int))){
+      setnames(prot_int, old = "ProteinGroupId", new = "id")
+    }
+  }
+  
+  if ("ProteinGroupId" %in% colnames(prot)){
+    if (!("id" %in% colnames(prot))){
+      setnames(prot, old = "ProteinGroupId", new = "id")
+    }
+  }
+  
+  stopifnot("id" %in% colnames(prot_int))
+  stopifnot("id" %in% colnames(prot))
+  
+  prot_int = merge(prot_int, prot, by.x = "id", by.y = "id", all.x = T)
+
+  prot_int = prot_int[order(prot_int$condition),]
+  prot_int[, numberOfReplicateCount:= sum(Imputed==0), by = .(condition, id)]
+  prot_int = prot_int[numberOfReplicateCount!=0,]
+  prot_int = prot_int[order(prot_int$id),]
+  
+  prot_int$ProteinId= ""
+  prot_int$GeneName = ""
+  prot_int$Description = ""
+  prot_int$Condition = prot_int$condition
+  prot_int$Replicate = prot_int$replicate
+  
+  if ("replicate" %in% colnames(prot_int)){
+    setnames(prot_int, old = "replicate", new = "Replicate")
+  } else {
+    setnames(prot_int, old = "mqExperiment", new = "Replicate")
+  }
+  
+  setnames(prot_int, old = "id", new = "ProteinGroupId")
+  setnames(prot_int, old = "condition", new = "Condition")
+  setnames(prot_int, old = "Description", new = "ProteinDescription")
+  setnames(prot_int, old = "score", new = "ProteinScore")
+  setnames(prot_int, old = "q-value", new = "ProteinQValue")
+  setnames(prot_int, old = "fasta headers", new = "FastaHeaders")
+  setnames(prot_int, old = "log2NInt", new = "log2NInt_ProteinGroupId")
+  setnames(prot_int, old = "nRLE", new = "centeredIntensity")
+  prot_int$FastaHeaders = sapply(strsplit(prot_int$FastaHeaders,";"), `[`, 1)
+  
+  proteinSet <- unique(prot_int$ProteinGroupId)
+  protList <- mclapply(proteinSet, function(prot) oneProteinReplData(prot_int[ProteinGroupId == prot,]),
+                       mc.cores = max(1,detectCores()-1))
+  protDF <- do.call(rbind, protList)
+  
+  dir.create(outputFolder, showWarnings = FALSE)
+  outPath = file.path(outputFolder,"protein_counts_and_intensity.json")
+  write_json(protDF, outPath, digits = NA, na = "null")
+}
+
+
+#' Transform data for one protein from a long format to the nested data structure needed for the Replicates tab.
+#' @param oneProt data.table single protein information stored in long format. 
+#' Columns required: `ProteinId`, `GeneName`, `Description`, `log2NInt`, `Condition`,
+#'  `Replicate`, `Imputed`. 
+#' @export oneProteinReplData
+oneProteinReplData <- function(oneProt){
+  infoProt <- unique(oneProt[,c("ProteinGroupId", "ProteinId","GeneName", "ProteinDescription",
+                                "FastaHeaders", "ProteinQValue","ProteinScore")])
+  
+  infoConds <- oneProt[, numberOfReplicateCount:= sum(Imputed==0), by = Condition ]
+  infoConds <- infoConds[, precentageOfReplicates:= sum(Imputed==0)/length(Replicate), by = Condition ]
+  infoConds <- infoConds[numberOfReplicateCount != 0,]
+  infoConds <- unique(infoConds[, c("Condition", "precentageOfReplicates","numberOfReplicateCount")])
+  setnames(infoConds, old = "Condition", new = "name")
+  
+  conditions <- data.frame(matrix(NA, nrow = length(infoConds$name), ncol = 4))
+  for(cond_idx in 1:length(infoConds$name)){
+    cond <- infoConds$name[cond_idx]
+    infoOneCond <- infoConds[name %in% cond, ]
+    
+    oneCondRepl <- data.table(oneProt)[Condition %in% cond, c("log2NInt_ProteinGroupId", "Imputed", "centeredIntensity", "z_norm")] 
+    oneCondRepl$replicateNum <- 1:nrow(oneCondRepl)
+    oneCondRepl <- oneCondRepl[,c("replicateNum","centeredIntensity", "z_norm", "log2NInt_ProteinGroupId", "Imputed")]
+    
+    entryCond <- dplyr::tibble(infoOneCond, intensityValues=list(oneCondRepl))
+    
+    conditions[cond_idx, ] <- entryCond
+  }
+  
+  colnames(conditions) <- c("name", "precentageOfReplicates", "numberOfReplicateCount", "intensityValues")
+  # Combine with protein Infos
+  oneProtNested <- dplyr::tibble(infoProt, conditions=list(conditions))
+}
