@@ -1,4 +1,5 @@
 import argparse
+import time
 
 from visualisation_runner import VisualisationRunner
 
@@ -11,9 +12,14 @@ if __name__ == "__main__":
 
   args = parser.parse_args()
 
+  start_time = time.time()
+
   VisualisationRunner(
     protein_viz_path=args.protein_viz_path,
     protein_viz_output_path=args.protein_viz_output_path,
     protein_counts_path=args.protein_counts_path,
     protein_counts_output_path=args.protein_counts_output_path,
   ).run()
+
+  print(" Time taken to  post process viz json files:"  )
+  print("--- %s seconds ---" % (time.time() - start_time))
