@@ -25,6 +25,5 @@ protein_viz_is_correct <- function(){
   
 }
 
-load("../../data/protein_viz_test_data.rda")
-
+data("protein_viz_test_data")
 protein_viz_is_correct()
