@@ -2,7 +2,6 @@ library(LFQProcessing)
 library(testthat)
 library(tools)
 
-
 protein_viz_is_correct <- function(){
   
   test_that("Test Files written as expected", {

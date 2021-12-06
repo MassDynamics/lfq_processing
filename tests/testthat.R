@@ -1,3 +1,5 @@
+Sys.setenv("RTESTS"="")
+
 library(testthat)
 library(LFQProcessing)
 

@@ -142,8 +142,20 @@ writeReplicateData <- function(prot_int, prot, outputFolder){
   prot_int$FastaHeaders = sapply(strsplit(prot_int$FastaHeaders,";"), `[`, 1)
   
   proteinSet <- unique(prot_int$ProteinGroupId)
+  
+  # work out how many cores to use
+  chk <- Sys.getenv("_R_CHECK_LIMIT_CORES_", "")
+  
+  if (nzchar(chk) && chk == "TRUE") {
+    # use 2 cores in CRAN/Travis/AppVeyor
+    num_workers <- 2L
+  } else {
+    # use all cores in devtools::test()
+    num_workers <- max(1,detectCores()-1)
+  }
+  
   protList <- mclapply(proteinSet, function(prot) oneProteinReplData(prot_int[ProteinGroupId == prot,]),
-                       mc.cores = max(1,detectCores()-1))
+                       mc.cores = num_workers)
   protDF <- do.call(rbind, protList)
   
   dir.create(outputFolder, showWarnings = FALSE)
