@@ -42,6 +42,7 @@ experiment_design_reader <- function(folder) {
   )]
   expdes[, file_name := str_replace(file_name, ".raw", "")]
   expdes[, mqExperiment := tolower(mqExperiment)]
+  expdes[, experiment := as.character(experiment)]
   
   expdes_list <- condition_name_encoder(des=expdes)
   expdes <- expdes_list[[1]]
