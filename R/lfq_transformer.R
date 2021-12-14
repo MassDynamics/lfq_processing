@@ -4,6 +4,7 @@
 #' @param output_folder An output folder to store produced files.
 #' @param imputStDev The Standard Deviation parameter for MNAR Imputation
 #' @param imputePosition The Position parameter for MNAR Imputation
+#' @param protein_only Boolean, TRUE means LFQ will only process protein level data
 #' @return A string describing the type of experiment
 #' @examples
 #' \dontrun{
@@ -24,21 +25,24 @@
 #' }
 #' @import data.table
 #' @export lfq_transformer
-lfq_transformer <- function(ma_tables, output_folder, imputeStDev=0.3, imputePosition=1.8) {
+lfq_transformer <- function(ma_tables, output_folder, 
+                            imputeStDev=0.3, imputePosition=1.8,
+                            protein_only=FALSE) {
   
   checkBy <- 'Experiment'
   
   #output_folder <- file.path(mq_folder, "transform")
   dir.create(output_folder, showWarnings = FALSE)
   
-  
   # read data
-  
-  msms <- ma_tables$msms
   prot <- ma_tables$prot
-  pept <- ma_tables$pept
-  mod_pept <- ma_tables$mod_pept
-  evidence <- ma_tables$evidence
+  
+  if (!protein_only){ 
+    msms <- ma_tables$msms
+    pept <- ma_tables$pept
+    mod_pept <- ma_tables$mod_pept
+    evidence <- ma_tables$evidence
+  }
   expdes <- ma_tables$expdes
   conditions_dict <- ma_tables$conditions_dict
   
@@ -48,25 +52,27 @@ lfq_transformer <- function(ma_tables, output_folder, imputeStDev=0.3, imputePos
     expdes <- remove_fracs_files_from_des(expdes)
   }
   
-  ###### ModPep ######
-  mod_pep_list <- lfq_quant_analysis(mod_pept, expdes, id_var = "id", output_folder,
-                                     "modificationSpecificPeptides_quant.txt",
-                                     "modificationSpecificPeptides_quant_intensities.txt",
-                                     conditions_dict=conditions_dict,
-                                     imputeStDev = imputeStDev,
-                                     imputePosition = imputePosition)
-  mod_pept <- mod_pep_list[[1]]
-  mod_pept_int <- mod_pep_list[[2]]
-  
-  ###### Peptides #######
-  pept_list <- lfq_quant_analysis(pept, expdes, id_var = "id", output_folder,
-                                  "peptides_quant.txt",
-                                  "peptides_quant_intensities.txt",
-                                  conditions_dict=conditions_dict,
-                                  imputeStDev = imputeStDev,
-                                  imputePosition = imputePosition)
-  pept <- pept_list[[1]]
-  pept_int <- pept_list[[2]]
+  if (!protein_only){ 
+    ###### ModPep ######
+    mod_pep_list <- lfq_quant_analysis(mod_pept, expdes, id_var = "id", output_folder,
+                                       "modificationSpecificPeptides_quant.txt",
+                                       "modificationSpecificPeptides_quant_intensities.txt",
+                                       conditions_dict=conditions_dict,
+                                       imputeStDev = imputeStDev,
+                                       imputePosition = imputePosition)
+    mod_pept <- mod_pep_list[[1]]
+    mod_pept_int <- mod_pep_list[[2]]
+    
+    ###### Peptides #######
+    pept_list <- lfq_quant_analysis(pept, expdes, id_var = "id", output_folder,
+                                    "peptides_quant.txt",
+                                    "peptides_quant_intensities.txt",
+                                    conditions_dict=conditions_dict,
+                                    imputeStDev = imputeStDev,
+                                    imputePosition = imputePosition)
+    pept <- pept_list[[1]]
+    pept_int <- pept_list[[2]]
+  }
   ###### Proteins ######
   prot_list <- lfq_quant_analysis(prot, expdes, id_var = "id", output_folder,
                                   "proteinGroups_quant.txt",
@@ -82,13 +88,32 @@ lfq_transformer <- function(ma_tables, output_folder, imputeStDev=0.3, imputePos
   # phospho_enrichment_quant(upload_folder, expdes, output_folder)
   # id_table <- make_id_link_table(output_folder, pept)
   
-  # CHange condition names in experiment design to match original names
-  expdes <- condition_name_decode_intensity_data(dt = expdes, dict = conditions_dict, writerunid = FALSE)
-  msms <- condition_name_decode_intensity_data(dt = msms, dict = conditions_dict, writerunid = FALSE)
-  evidence <- condition_name_decode_intensity_data(dt = evidence, dict = conditions_dict, writerunid = FALSE)
+  # Change condition names in experiment design to match original names
+  if (!protein_only){ 
+    expdes <- condition_name_decode_intensity_data(dt = expdes, dict = conditions_dict, writerunid = FALSE)
+    msms <- condition_name_decode_intensity_data(dt = msms, dict = conditions_dict, writerunid = FALSE)
+    evidence <- condition_name_decode_intensity_data(dt = evidence, dict = conditions_dict, writerunid = FALSE)
+  }
+  
   conditionComparisonMapping = decodeComparisonConditionMapping(conditionComparisonMapping, conditions_dict)
   
-  return(list(prot, prot_int, pept, pept_int, mod_pept, mod_pept_int, expdes, evidence, msms, conditionComparisonMapping))
+  if (!protein_only){ 
+    return(list(prot = prot, 
+                prot_int = prot_int, 
+                pept = pept, 
+                pept_int = pept_int, 
+                mod_pept = mod_pept, 
+                mod_pept_int = mod_pept_int, 
+                expdes = expdes, 
+                evidence = evidence, 
+                msms = msms, 
+                conditionComparisonMapping = conditionComparisonMapping))
+  } else {
+    return(list(prot = prot, 
+                prot_int = prot_int, 
+                conditionComparisonMapping = conditionComparisonMapping))
+  }
+  
 }
 
 

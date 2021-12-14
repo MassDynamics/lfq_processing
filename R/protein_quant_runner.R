@@ -1,11 +1,12 @@
 #' Run Pairwise Protein Quantification and Quality Control on Maxquant output
 #' @param folder A maxquant txt output folder.
 #' @param output_folder An output folder to store produced files.
+#' @param protein_only Boolean, TRUE means LFQ will only process protein level data
 #' @return A string describing the type of experiment
 #' @example protein_quant_runner("../data/iPRG2015/txt/", "../data/iPRG2015/txt/transform")
 #' @import data.table
 #' @export protein_quant_runner
-protein_quant_runner <- function(upload_folder, output_folder) {
+protein_quant_runner <- function(upload_folder, output_folder, protein_only = FALSE) {
   
   dir.create(output_folder, showWarnings = FALSE)
   
@@ -20,26 +21,30 @@ protein_quant_runner <- function(upload_folder, output_folder) {
   if (experiment_type == "LFQ"){
     start_time <- Sys.time()
     
-    ma_tables <- lfq_read_data(upload_folder, experiment_type)
+    ma_tables <- lfq_read_data(upload_folder, experiment_type, protein_only)
     
     tmp =  lfq_transformer(ma_tables = ma_tables,
                            output_folder = output_folder,
                            imputeStDev=0.3,
-                           imputePosition=1.8)
+                           imputePosition=1.8,
+                           protein_only = protein_only)
     
     end_time <- Sys.time()
     print(end_time - start_time)
     
-    prot = tmp[[1]]
-    prot_int = tmp[[2]]
-    pept = tmp[[3]]
-    pept_int = tmp[[4]]
-    mod_pept = tmp[[5]]
-    mod_pept_int = tmp[[6]]
-    expdes = tmp[[7]]
-    evidence = tmp[[8]]
-    msms = tmp[[9]]
-    conditionComparisonMapping = tmp[[10]]
+    prot = tmp$prot
+    prot_int = tmp$prot_int
+    conditionComparisonMapping = tmp$conditionComparisonMapping
+    expdes = tmp$expdes
+    
+    if (!protein_only){
+      pept = tmp$pept
+      pept_int = tmp$pept_int
+      mod_pept = tmp$mod_pept
+      mod_pept_int = tmp$mod_pept_int
+      evidence = tmp$evidence
+      msms = tmp$msms
+    }
     
     rm(tmp)
     
@@ -84,10 +89,11 @@ protein_quant_runner <- function(upload_folder, output_folder) {
     print(experiment_type)
   }
   
-  output_format = "html"
-  rmarkdown::render(file.path(output_folder, "QC_Report.Rmd"))
-  output_format = "pdf"
-  rmarkdown::render(file.path(output_folder, "QC_Report.Rmd"), output_format="pdf_document")
+  # temporarily turn off qc report
+  #output_format = "html"
+  #rmarkdown::render(file.path(output_folder, "QC_Report.Rmd"))
+  #output_format = "pdf"
+  #rmarkdown::render(file.path(output_folder, "QC_Report.Rmd"), output_format="pdf_document")
   
   
   # clean up
@@ -102,9 +108,9 @@ protein_quant_runner <- function(upload_folder, output_folder) {
               copy.mode = TRUE)
   }
   
-  unlink(file.path(output_folder, "QC_Report_files/"), recursive = TRUE)
-  unlink(file.path(output_folder, "qc_report_files"), recursive = TRUE)
-  unlink(file.path(output_folder, "QC_Report.Rmd"), recursive = TRUE)
+ # unlink(file.path(output_folder, "QC_Report_files/"), recursive = TRUE)
+  #unlink(file.path(output_folder, "qc_report_files"), recursive = TRUE)
+  #unlink(file.path(output_folder, "QC_Report.Rmd"), recursive = TRUE)
   
   rm(pept)
   rm(pept_int)

@@ -1,6 +1,7 @@
 #' @import data.table
+#' @param protein_only Boolean, TRUE means LFQ will only process protein level data
 #' @export lfq_read_data
-lfq_read_data <- function(upload_folder, experiment_type) {
+lfq_read_data <- function(upload_folder, experiment_type, protein_only) {
   
   # read experiment design
   expdes_list <- experiment_design_reader(upload_folder)
@@ -9,26 +10,39 @@ lfq_read_data <- function(upload_folder, experiment_type) {
   
   cat('Reading Tables\n')
   
-  # msms.txt
-  msms <- msms_txt_reader(upload_folder, expdes)
+  
   # proteinGroups.txt
   prot <- lfq_proteinGroup_txt_reader(upload_folder, expdes)
-  # peptides.txt
-  pept <- lfq_peptides_txt_reader(upload_folder, expdes)
-  # modificationSpecificPeptides.txt
-  mod_pept <- lfq_modificationSpecificPeptides_txt_reader(upload_folder, expdes)
-  # evidence.txt
-  evidence <- evidence_txt_reader(upload_folder, expdes)
   
-  return(list(
-    msms = msms,
-    prot = prot,
-    pept = pept,
-    mod_pept = mod_pept,
-    evidence = evidence,
-    expdes = expdes,
-    conditions_dict = conditions_dict
-  ))
+  if (!protein_only){ 
+    # msms.txt
+    msms <- msms_txt_reader(upload_folder, expdes)
+    # peptides.txt
+    pept <- lfq_peptides_txt_reader(upload_folder, expdes)
+    # modificationSpecificPeptides.txt
+    mod_pept <- lfq_modificationSpecificPeptides_txt_reader(upload_folder, expdes)
+    # evidence.txt
+    evidence <- evidence_txt_reader(upload_folder, expdes)
+    
+    return(list(
+      msms = msms,
+      prot = prot,
+      pept = pept,
+      mod_pept = mod_pept,
+      evidence = evidence,
+      expdes = expdes,
+      conditions_dict = conditions_dict
+    ))
+  } else {
+    return(list(
+      prot = prot,
+      expdes = expdes,
+      conditions_dict = conditions_dict
+    ))
+  }
+  
+
+
 }
 
 experiment_design_reader <- function(folder) {

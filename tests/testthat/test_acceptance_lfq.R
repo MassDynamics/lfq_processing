@@ -5,7 +5,8 @@ library(testthat)
 current_her2 =  lfq_transformer(ma_tables = example_lfq_her2_targetted_therapy_tables,
                                 output_folder = "./tmp",
                                 imputeStDev=0.3,
-                                imputePosition=1.8)
+                                imputePosition=1.8,
+                                protein_only=FALSE)
 
 
 acceptance_test<- function(current, expected,
