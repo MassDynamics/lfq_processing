@@ -90,10 +90,10 @@ protein_quant_runner <- function(upload_folder, output_folder, protein_only = FA
   }
   
   # temporarily turn off qc report
-  #output_format = "html"
-  #rmarkdown::render(file.path(output_folder, "QC_Report.Rmd"))
-  #output_format = "pdf"
-  #rmarkdown::render(file.path(output_folder, "QC_Report.Rmd"), output_format="pdf_document")
+  output_format = "html"
+  rmarkdown::render(file.path(output_folder, "QC_Report.Rmd"))
+  output_format = "pdf"
+  rmarkdown::render(file.path(output_folder, "QC_Report.Rmd"), output_format="pdf_document")
   
   
   # clean up

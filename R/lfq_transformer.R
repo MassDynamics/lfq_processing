@@ -89,8 +89,8 @@ lfq_transformer <- function(ma_tables, output_folder,
   # id_table <- make_id_link_table(output_folder, pept)
   
   # Change condition names in experiment design to match original names
+  expdes <- condition_name_decode_intensity_data(dt = expdes, dict = conditions_dict, writerunid = FALSE)
   if (!protein_only){ 
-    expdes <- condition_name_decode_intensity_data(dt = expdes, dict = conditions_dict, writerunid = FALSE)
     msms <- condition_name_decode_intensity_data(dt = msms, dict = conditions_dict, writerunid = FALSE)
     evidence <- condition_name_decode_intensity_data(dt = evidence, dict = conditions_dict, writerunid = FALSE)
   }
@@ -111,7 +111,8 @@ lfq_transformer <- function(ma_tables, output_folder,
   } else {
     return(list(prot = prot, 
                 prot_int = prot_int, 
-                conditionComparisonMapping = conditionComparisonMapping))
+                conditionComparisonMapping = conditionComparisonMapping,
+                expdes = expdes))
   }
   
 }

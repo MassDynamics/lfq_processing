@@ -6,7 +6,7 @@ current_her2 =  lfq_transformer(ma_tables = example_lfq_her2_targetted_therapy_t
                                 output_folder = "./tmp",
                                 imputeStDev=0.3,
                                 imputePosition=1.8,
-                                protein_only=FALSE)
+                                protein_only=TRUE)
 
 current_her2 = unname(current_her2)
 acceptance_test<- function(current, expected,
@@ -14,7 +14,7 @@ acceptance_test<- function(current, expected,
   
   test_that("approximately equal", {
     
-    approx_same = all.equal(expected, current, tolerance = tolerance)
+    approx_same = all.equal(expected$prot, current$prot, tolerance = tolerance)
     expect_true(approx_same) #tolerate small differences
   })
   
