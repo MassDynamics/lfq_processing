@@ -121,6 +121,14 @@ tmt_quant_analysis <- function(dt, des, id_var = "id",
   measure_regex = "reporter intensity corrected "
   measure_vars = grep(measure_regex_channel, colnames(dt), value = T)
   
+  # if measure_vars is empty, try changing the regex for not correct
+  if (length(measure_vars) == 0){
+    print("Default back: Try using not corrected intensities")
+    measure_regex_channel = "reporter intensity not corrected [0-9]* "
+    measure_regex = "reporter intensity not corrected "
+    measure_vars = grep(measure_regex_channel, colnames(dt), value = T)
+  }
+  
   # melt data
   dt_int <- melt.data.table(
     dt,
@@ -142,9 +150,9 @@ tmt_quant_analysis <- function(dt, des, id_var = "id",
   dt_int[intensity > 0 , log2NInt := log2(intensity)]
 
   # extract info from columns
-  dt_int[, experiment := gsub("reporter intensity corrected [0-9]+? (.*)","\\1", reporter_channel)]
+  dt_int[, experiment := gsub("reporter intensity .?.?.? ?corrected [0-9]+? (.*)","\\1", reporter_channel)]
   dt_int[, experiment := tolower(experiment)]
-  dt_int[, reporter_channel := gsub("reporter intensity corrected ([0-9]+?) .*","\\1", reporter_channel)]
+  dt_int[, reporter_channel := gsub("reporter intensity .?.?.? corrected ([0-9]+?) .*","\\1", reporter_channel)]
 
   # perform median subtraction for each reporter_channel group
   # reporter channel + condition level median subtraction
