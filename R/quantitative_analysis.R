@@ -152,7 +152,7 @@ tmt_quant_analysis <- function(dt, des, id_var = "id",
   # extract info from columns
   dt_int[, experiment := gsub("reporter intensity .?.?.? ?corrected [0-9]+? (.*)","\\1", reporter_channel)]
   dt_int[, experiment := tolower(experiment)]
-  dt_int[, reporter_channel := gsub("reporter intensity .?.?.? corrected ([0-9]+?) .*","\\1", reporter_channel)]
+  dt_int[, reporter_channel := gsub("reporter intensity .?.?.? ?corrected ([0-9]+?) .*","\\1", reporter_channel)]
 
   # perform median subtraction for each reporter_channel group
   # reporter channel + condition level median subtraction

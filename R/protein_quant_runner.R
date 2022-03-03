@@ -72,16 +72,20 @@ protein_quant_runner <- function(upload_folder, output_folder, protein_only = FA
         print("Current column names:")
         print(colnames(protein_groups)[grep("reporter intensity corrected [0-9]*",colnames(protein_groups))])
         
-        colnames(protein_groups)[grep("reporter intensity corrected [0-9]*",colnames(protein_groups))] = paste(
-          colnames(protein_groups)[grep("reporter intensity corrected [0-9]*",colnames(protein_groups))], 
-          "single_run"
-        )
+        if (length(grep("reporter intensity corrected [0-9]*",colnames(protein_groups)))>0){
+          colnames(protein_groups)[grep("reporter intensity corrected [0-9]*",colnames(protein_groups))] = paste(
+            colnames(protein_groups)[grep("reporter intensity corrected [0-9]*",colnames(protein_groups))], 
+            "single_run"
+          )
+        }
         
-        # do this for not corrected as well
-        colnames(protein_groups)[grep("reporter intensity not corrected [0-9]*",colnames(protein_groups))] = paste(
-          colnames(protein_groups)[grep("reporter intensity not corrected [0-9]*",colnames(protein_groups))], 
-          "single_run"
-        )
+        if (length(grep("reporter intensity not corrected [0-9]*",colnames(protein_groups)))>0){
+          # do this for not corrected as well
+          colnames(protein_groups)[grep("reporter intensity not corrected [0-9]*",colnames(protein_groups))] = paste(
+            colnames(protein_groups)[grep("reporter intensity not corrected [0-9]*",colnames(protein_groups))], 
+            "single_run"
+          )
+        }
         
         print("New column names:")
         print(colnames(protein_groups)[grep("reporter intensity corrected [0-9]*",colnames(protein_groups))])
