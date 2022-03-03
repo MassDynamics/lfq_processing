@@ -129,6 +129,7 @@ tmt_quant_analysis <- function(dt, des, id_var = "id",
     value.name = "intensity",
     variable.name = "reporter_channel"
   )
+  stopifnot("intensity" %in% colnames(dt_int))
 
   #print(grep(measure_regex_channel, colnames(dt), value = T))
   dt_int <- as.data.table(dt_int) # make sure it's a data table
