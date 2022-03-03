@@ -62,6 +62,32 @@ protein_quant_runner <- function(upload_folder, output_folder, protein_only = FA
     
     protein_groups <- tmt_proteinGroup_txt_reader(upload_folder)
     des <- fread(file.path(upload_folder, "experimentDesign_original.txt"))
+    
+    if (all(is.na(des$experiment))){ #if there's no lcms-run-name  you're in trouble
+      if (!any(duplicated(des$reporter_channel))){
+        #if reporter channels are used once, you're ok
+        # do a rescue
+        cat("Single Run TMT experiment, adding an experiment name")
+        
+        print("Current column names:")
+        print(colnames(protein_groups)[grep("reporter intensity corrected [0-9]*",colnames(protein_groups))])
+        
+        colnames(protein_groups)[grep("reporter intensity corrected [0-9]*",colnames(protein_groups))] = paste(
+          colnames(protein_groups)[grep("reporter intensity corrected [0-9]*",colnames(protein_groups))], 
+          "single_run"
+        )
+        
+        print("New column names:")
+        print(colnames(protein_groups)[grep("reporter intensity corrected [0-9]*",colnames(protein_groups))])
+        
+        
+        #update experiment
+        des$experiment <- as.character(des$experiment)
+        des$experiment = "single_run"
+      } 
+    }
+    stopifnot(!(all(is.na(des$experiment))))
+    
     des$reporter_channel <- as.character(des$reporter_channel)
     verify_tmt_des(des)
     
