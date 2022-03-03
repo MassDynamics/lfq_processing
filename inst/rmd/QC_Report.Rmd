@@ -46,7 +46,7 @@ details span {
 
 --- 
 
-```{r, eval=TRUE, warning=FALSE, echo=FALSE, error=FALSE, message=FALSE}
+```{r eval=TRUE, echo=FALSE, error=FALSE, message=FALSE, warning=FALSE}
 knitr::opts_chunk$set(fig.cap = NULL)
 
 library(data.table)
@@ -67,6 +67,11 @@ library(bit64)
 num_files <- expdes[, .N]
 run_per_condition <- expdes[, .(countRepMax = .N), by = .(experiment)]
 setnames(run_per_condition, "experiment", "condition")
+
+# for fractions, create file name from mqExperiment and Fraction
+if (!("file_name" %in% colnames(expdes))){
+  expdes$file_name = paste(expdes$experiment, " - ", expdes$Replicate)
+}
 
 
 if (!protein_only){
