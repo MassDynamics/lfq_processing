@@ -123,8 +123,7 @@ rm(prot_id_in_a_cond, prot_int_rep)
       <li>Experiment Health</li>
       <li>Feature Completeness</li>
       <li>Sample Preparation</li>
-      <li>Experiment Health</li>
-      <li>Normalisation and Imputation</li>
+      <li>Identifications</li>
     </ul>
   </span>
 </details> 

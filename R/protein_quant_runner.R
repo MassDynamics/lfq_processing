@@ -44,17 +44,25 @@ protein_quant_runner <- function(upload_folder, output_folder, protein_only = FA
       mod_pept_int = tmp$mod_pept_int
       evidence = tmp$evidence
       msms = tmp$msms
+      
+      # get qc report from package
+      file.copy(from=system.file("rmd","QC_Report.Rmd", package = "LFQProcessing"),
+                to=output_folder,
+                overwrite = TRUE, recursive = TRUE,
+                copy.mode = TRUE)
+    } else {
+      # get qc report from package
+      file.copy(from=system.file("rmd","QC_Report_protein_only.Rmd", package = "LFQProcessing"),
+                to=file.path(output_folder,"QC_Report.Rmd"),
+                overwrite = TRUE, recursive = TRUE,
+                copy.mode = TRUE)
     }
     
     rm(tmp)
     
     checkBy <- 'Experiment'
     
-    # get qc report from package
-    file.copy(from=system.file("rmd","QC_Report.Rmd", package = "LFQProcessing"),
-              to=output_folder,
-              overwrite = TRUE, recursive = TRUE,
-              copy.mode = TRUE)
+
     
   } else if (experiment_type == "LABEL"){
     
