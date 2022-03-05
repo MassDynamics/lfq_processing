@@ -47,7 +47,8 @@ lfq_read_data <- function(upload_folder, experiment_type, protein_only) {
 
 experiment_design_reader <- function(folder) {
   expdes <- fread(file.path(folder, 'experimentDesign_original.txt'),
-                  stringsAsFactors = F, header = T, verbose = F)
+                  stringsAsFactors = F, header = T, verbose = F, 
+                  keepLeadingZeros = TRUE)
   setnames(expdes, "name", "file_name")
   expdes[, Replicate := bioRep]
   expdes[, `:=`(
