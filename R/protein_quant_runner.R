@@ -75,34 +75,12 @@ protein_quant_runner <- function(upload_folder, output_folder, protein_only = FA
       if (!any(duplicated(des$reporter_channel))){
         #if reporter channels are used once, you're ok
         # do a rescue
-        cat("Single Run TMT experiment, adding an experiment name")
-        
-        print("Current column names:")
-        print(colnames(protein_groups)[grep("reporter intensity corrected [0-9]*",colnames(protein_groups))])
-        
-        if (length(grep("reporter intensity corrected [0-9]*",colnames(protein_groups)))>0){
-          colnames(protein_groups)[grep("reporter intensity corrected [0-9]*",colnames(protein_groups))] = paste(
-            colnames(protein_groups)[grep("reporter intensity corrected [0-9]*",colnames(protein_groups))], 
-            "single_run"
-          )
-        }
-        
-        if (length(grep("reporter intensity not corrected [0-9]*",colnames(protein_groups)))>0){
-          # do this for not corrected as well
-          colnames(protein_groups)[grep("reporter intensity not corrected [0-9]*",colnames(protein_groups))] = paste(
-            colnames(protein_groups)[grep("reporter intensity not corrected [0-9]*",colnames(protein_groups))], 
-            "single_run"
-          )
-        }
-        
-        print("New column names:")
-        print(colnames(protein_groups)[grep("reporter intensity corrected [0-9]*",colnames(protein_groups))])
-        
-        
-        #update experiment
-        des$experiment <- as.character(des$experiment)
-        des$experiment = "single_run"
-      } 
+        cat("Single Run TMT experiment. Experiment name is blank")
+        des$experiment = ""
+      } else {
+        cat("Problem, no experiment or is.na experiment column without unique channels")
+        stop()
+      }
     }
     stopifnot(!(all(is.na(des$experiment))))
     

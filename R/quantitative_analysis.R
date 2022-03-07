@@ -117,15 +117,13 @@ tmt_quant_analysis <- function(dt, des, id_var = "id",
   colnames(des) <- tolower(colnames(des))
   
   #colnames(dt) <- gsub(" ", ".", colnames(dt))
-  measure_regex_channel = "reporter intensity corrected [0-9]* "
-  measure_regex = "reporter intensity corrected "
+  measure_regex_channel = "reporter intensity corrected [0-9]* ?"
   measure_vars = grep(measure_regex_channel, colnames(dt), value = T)
   
   # if measure_vars is empty, try changing the regex for not correct
   if (length(measure_vars) == 0){
-    print("Default back: Try using not corrected intensities")
-    measure_regex_channel = "reporter intensity not corrected [0-9]* "
-    measure_regex = "reporter intensity not corrected "
+    print("Default backup: Try using not corrected intensities")
+    measure_regex_channel = "reporter intensity not corrected [0-9]* ?"
     measure_vars = grep(measure_regex_channel, colnames(dt), value = T)
   }
   
@@ -150,9 +148,9 @@ tmt_quant_analysis <- function(dt, des, id_var = "id",
   dt_int[intensity > 0 , log2NInt := log2(intensity)]
 
   # extract info from columns
-  dt_int[, experiment := gsub("reporter intensity .?.?.? ?corrected [0-9]+? (.*)","\\1", reporter_channel)]
+  dt_int[, experiment := mygsub("reporter intensity .?.?.? ?corrected [0-9]+? (.*)", reporter_channel)]
   dt_int[, experiment := tolower(experiment)]
-  dt_int[, reporter_channel := gsub("reporter intensity .?.?.? ?corrected ([0-9]+?) .*","\\1", reporter_channel)]
+  dt_int[, reporter_channel := mygsub("reporter intensity .?.?.? ?corrected ([0-9]+?) ?.*", reporter_channel)]
 
   # perform median subtraction for each reporter_channel group
   # reporter channel + condition level median subtraction
@@ -220,5 +218,14 @@ detect_fractions <- function(des){
   } else {
     return (FALSE)
   }
+}
+
+
+# return the regex capture if it is there, otherwise return an empty string
+mygsub <- function( pattern, x){
+  ans <- ifelse(grepl(pattern, x), 
+                gsub(pattern, "\\1", x), 
+                "")
+  return(ans)
 }
 

@@ -44,3 +44,5 @@ tests/data/PXD031774/output/protein_viz.json
 tests/testthat/.DS_Store
 tests/testthat/tmp/
 tmp/
+
+**.DS_Store
