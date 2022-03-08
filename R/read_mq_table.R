@@ -45,6 +45,7 @@ lfq_read_data <- function(upload_folder, experiment_type, protein_only) {
 
 }
 
+#' @export experiment_design_reader
 experiment_design_reader <- function(folder) {
   expdes <- fread(file.path(folder, 'experimentDesign_original.txt'),
                   stringsAsFactors = F, header = T, verbose = F, 
@@ -58,6 +59,14 @@ experiment_design_reader <- function(folder) {
   expdes[, file_name := str_replace(file_name, ".raw", "")]
   expdes[, mqExperiment := tolower(mqExperiment)]
   expdes[, experiment := as.character(experiment)]
+  
+  # remove rows with "TRUE" in remove column from experimental design.
+  if ("remove" %in% colnames(expdes)){
+    cat("remove TRUE remove")
+    nrows_removed = sum(as.character(expdes$remove) != "TRUE")
+    expdes <- expdes[as.character(expdes$remove) != "TRUE"]
+    cat(paste("Removed this many rows:" , nrows_removed))
+  }
   
   expdes_list <- condition_name_encoder(des=expdes)
   expdes <- expdes_list[[1]]
