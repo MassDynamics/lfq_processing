@@ -1,5 +1,6 @@
 # LFQproceessing
 
+[![Build status](https://badge.buildkite.com/3343c73db54f20ed37c7f7723e9a9e97861d0e65a1f1902e96.svg)](https://buildkite.com/mass-dynamics/step-maxquant-quant-analysis)
 [![DOI](https://zenodo.org/badge/341805035.svg)](https://zenodo.org/badge/latestdoi/341805035)
 
 The LFQProcessing R package enables users to load and process the output of the [MaxQuant Computational Platform](https://www.maxquant.org/) for processing LC-MS/MS proteomics data. This package contains utilities for performing differential expression DE statistics and Quality Control reports. 
