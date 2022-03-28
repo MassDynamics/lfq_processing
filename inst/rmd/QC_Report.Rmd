@@ -1258,14 +1258,19 @@ p <- ggplot(dt, aes(x = Run, y = percent,  fill=`missed cleavages`, label=Run)) 
 
 
 
-if (output_format == "pdf"){
-  p
-} else {
-  ggplotly(p, tooltip = c("x","y")) %>% config(displayModeBar = T, 
-                                               modeBarButtons = list(list('toImage')),
-                                               displaylogo = F)
+if (all(is.na(dt$`missed cleavages`))) { 
+  cat("'missed cleavage' column is empty. Can't estimate digestion efficiency.")
+} else{
+  if (output_format == "pdf"){
+    p
+  } else {
+    ggplotly(p, tooltip = c("x","y")) %>% config(displayModeBar = T, 
+                                                 modeBarButtons = list(list('toImage')),
+                                                 displaylogo = F)
+  }
 }
 }
+
 ```
 
 
