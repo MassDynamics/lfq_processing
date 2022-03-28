@@ -63,7 +63,7 @@ experiment_design_reader <- function(folder) {
   # remove rows with "TRUE" in remove column from experimental design.
   if ("remove" %in% colnames(expdes)){
     cat("remove TRUE remove")
-    nrows_removed = sum(as.character(expdes$remove) != "TRUE")
+    nrows_removed = sum(as.character(expdes$remove) == "TRUE")
     expdes <- expdes[as.character(expdes$remove) != "TRUE"]
     cat(paste("Removed this many rows:" , nrows_removed))
   }
@@ -171,6 +171,7 @@ lfq_peptides_txt_reader <- function(folder, des) {
   #   intensity_columns
   # )
   
+  # filter columns
   columns_whitelist <- c(
     "sequence", "amino acid before", "amino acid after",
     "length", "missed cleavages", "mass", "proteins", "leading razor protein", "unique (groups)", "unique (proteins)", "charges", "pep", "score",
