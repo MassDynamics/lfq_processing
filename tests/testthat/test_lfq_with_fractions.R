@@ -4,7 +4,7 @@ library(testthat, quietly = TRUE)
 
 acceptance_test<- function(tolerance = 10**-3){
   
-  test_that("TMT experiment without mq 'experiment' label works", {
+  test_that("LFQ with fractions works", {
     
     # remove it if it exists
     if (file.exists("../data/PXD020248/output/proteinGroups_quant.txt")) {

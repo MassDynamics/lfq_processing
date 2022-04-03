@@ -4,10 +4,12 @@
 \alias{protein_quant_runner}
 \title{Run Pairwise Protein Quantification and Quality Control on Maxquant output}
 \usage{
-protein_quant_runner(upload_folder, output_folder)
+protein_quant_runner(upload_folder, output_folder, protein_only = FALSE)
 }
 \arguments{
 \item{output_folder}{An output folder to store produced files.}
+
+\item{protein_only}{Boolean, TRUE means LFQ will only process protein level data}
 
 \item{folder}{A maxquant txt output folder.}
 }

@@ -46,21 +46,8 @@ write_protein_viz <- function(prot, output_folder, conditionComparisonMapping){
 }
 
 prep_comparison_table <- function(prot, comparison){
-  
-  # disambiguate, assume no contaminants
-  prot$Accession <- sapply(strsplit(prot$`majority protein ids`,";"), `[`, 1)
-  prot$Gene <- get_genes_from_id(prot$Accession)
-  prot$Accession_id <- str_extract(string = prot$Accession,
-                                   pattern = "[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}")
-  
-  prot$ProteinDescription = ""
-  # remove protein id and gene id so python can deal with it
-  prot$Accession_id = ""
-  prot$Gene = ""
-  
-  
-  # remove extra fasta headers
-  prot$`fasta headers` = sapply(strsplit(prot$`fasta headers`,";"), `[`, 1)
+
+  prot <- parse_id_columns(prot)
   
   cols <- c("id", "Accession_id", "Gene", "ProteinDescription","fasta headers", "q-value", "score",
             str_c(c("P.Value ", "adj.P.Val ", "logFC ", "CI.L ","CI.R "), comparison))
@@ -79,12 +66,6 @@ get_comparisons <- function(prot){
   logFC_cols <- colnames(prot)[idx]
   comparisons <- gsub("logFC ","",logFC_cols)
   return(comparisons)
-}
-
-get_genes_from_id <- function(genes){
-  genes <- gsub(".*\\|", "", genes)
-  genes <- gsub("_.*", "", genes)
-  genes
 }
 
 

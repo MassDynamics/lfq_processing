@@ -8,13 +8,16 @@ lfq_transformer(
   ma_tables,
   output_folder,
   imputeStDev = 0.3,
-  imputePosition = 1.8
+  imputePosition = 1.8,
+  protein_only = FALSE
 )
 }
 \arguments{
 \item{output_folder}{An output folder to store produced files.}
 
 \item{imputePosition}{The Position parameter for MNAR Imputation}
+
+\item{protein_only}{Boolean, TRUE means LFQ will only process protein level data}
 
 \item{mq_folder}{A maxquant txt output folder.}
 

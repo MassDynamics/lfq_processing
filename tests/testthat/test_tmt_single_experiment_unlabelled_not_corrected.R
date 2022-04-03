@@ -4,7 +4,7 @@ library(testthat, quietly = TRUE)
 
 acceptance_test<- function(tolerance = 10**-3){
   
-  test_that("TMT experiment without mq 'experiment' label works", {
+  test_that("TMT experiment single experiment unlabelled not corrected works", {
     
     # remove it if it exists
     if (file.exists("../data/PXD031774/output/proteinGroups_quant.txt")) {

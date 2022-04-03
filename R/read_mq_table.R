@@ -61,12 +61,12 @@ experiment_design_reader <- function(folder) {
   expdes[, experiment := as.character(experiment)]
   
   # remove rows with "TRUE" in remove column from experimental design.
-  if ("remove" %in% colnames(expdes)){
-    cat("remove TRUE remove")
-    nrows_removed = sum(as.character(expdes$remove) == "TRUE")
-    expdes <- expdes[as.character(expdes$remove) != "TRUE"]
-    cat(paste("Removed this many rows:" , nrows_removed))
-  }
+  #if ("remove" %in% colnames(expdes)){
+  #  cat("remove TRUE remove")
+  #  nrows_removed = sum(as.character(expdes$remove) == "TRUE")
+  #  expdes <- expdes[as.character(expdes$remove) != "TRUE"]
+  #  cat(paste("Removed this many rows:" , nrows_removed))
+  #}
   
   expdes_list <- condition_name_encoder(des=expdes)
   expdes <- expdes_list[[1]]
@@ -143,6 +143,12 @@ lfq_proteinGroup_txt_reader <- function(folder, des) {
   
   dt <- generic_mq_table_reader(folder, 'proteinGroups.txt')
   intensity_columns = get_lfq_intensity_columns(dt, des)
+  
+  # filter rows by at least one non-zero value in intensity columns
+  #cat("Removing rows with all zero values amongst used intensity columns")
+  #cat(paste("There were ",sum(rowSums(dt[, ..intensity_columns])>0), "such rows"))
+  #cat("----------------")
+  #dt <- dt[rowSums(dt[, ..intensity_columns])>0,]
   
   columns_whitelist <- c("protein ids", "majority protein ids", "q-value", "score", "peptide counts (all)", "peptide counts (razor+unique)", "peptide counts (unique)", "fasta headers", "number of proteins", "peptides",
                          "razor + unique peptides", "unique peptides", "sequence coverage [%]", "unique + razor sequence coverage [%]", "unique sequence coverage [%]", "mol. weight [kda]", "sequence length",
