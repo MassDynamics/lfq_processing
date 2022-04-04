@@ -97,7 +97,7 @@ writeReplicateData <- function(prot_int, prot, outputFolder){
 
   prot_int = prot_int[order(prot_int$condition),]
   prot_int[, numberOfReplicateCount:= sum(Imputed==0), by = .(condition, id)]
-  prot_int = prot_int[numberOfReplicateCount!=0,]
+  
   prot_int = prot_int[order(prot_int$id),]
   
   prot_int$ProteinId= ""
@@ -156,7 +156,7 @@ oneProteinReplData <- function(oneProt){
   
   infoConds <- oneProt[, numberOfReplicateCount:= sum(Imputed==0), by = Condition ]
   infoConds <- infoConds[, precentageOfReplicates:= sum(Imputed==0)/length(Replicate), by = Condition ]
-  infoConds <- infoConds[numberOfReplicateCount != 0,]
+  
   infoConds <- unique(infoConds[, c("Condition", "precentageOfReplicates","numberOfReplicateCount")])
   setnames(infoConds, old = "Condition", new = "name")
   
