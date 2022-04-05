@@ -100,9 +100,8 @@ writeReplicateData <- function(prot_int, prot, outputFolder){
   
   prot_int = prot_int[order(prot_int$id),]
   
-  prot_int$ProteinId= ""
-  prot_int$GeneName = ""
-  prot_int$Description = ""
+  prot_int <- parse_id_columns(prot_int)
+
   prot_int$Condition = prot_int$condition
   prot_int$Replicate = prot_int$replicate
   
@@ -114,13 +113,13 @@ writeReplicateData <- function(prot_int, prot, outputFolder){
   
   setnames(prot_int, old = "id", new = "ProteinGroupId")
   setnames(prot_int, old = "condition", new = "Condition")
-  setnames(prot_int, old = "Description", new = "ProteinDescription")
+  setnames(prot_int, old = "Accession_id", new = "ProteinId")
+  setnames(prot_int, old = "Gene", new = "GeneName")
   setnames(prot_int, old = "score", new = "ProteinScore")
   setnames(prot_int, old = "q-value", new = "ProteinQValue")
   setnames(prot_int, old = "fasta headers", new = "FastaHeaders")
   setnames(prot_int, old = "log2NInt", new = "log2NInt_ProteinGroupId")
   setnames(prot_int, old = "nRLE", new = "centeredIntensity")
-  prot_int$FastaHeaders = sapply(strsplit(prot_int$FastaHeaders,";"), `[`, 1)
   
   proteinSet <- unique(prot_int$ProteinGroupId)
   
@@ -134,7 +133,7 @@ writeReplicateData <- function(prot_int, prot, outputFolder){
     # use all cores in devtools::test()
     num_workers <- max(1,detectCores()-1)
   }
-  
+
   protList <- mclapply(proteinSet, function(prot) oneProteinReplData(prot_int[ProteinGroupId == prot,]),
                        mc.cores = num_workers)
   protDF <- do.call(rbind, protList)
@@ -151,8 +150,7 @@ writeReplicateData <- function(prot_int, prot, outputFolder){
 #'  `Replicate`, `Imputed`, `ProteinQValue`, `ProteinScore`,  `FastaHeaders`. 
 #' @export oneProteinReplData
 oneProteinReplData <- function(oneProt){
-  infoProt <- unique(oneProt[,c("ProteinGroupId", "ProteinId","GeneName", "ProteinDescription",
-                                "FastaHeaders", "ProteinQValue","ProteinScore")])
+  infoProt <- unique(oneProt[,c("ProteinGroupId", "ProteinId","GeneName", "ProteinDescription", "FastaHeaders", "ProteinQValue","ProteinScore")])
   
   infoConds <- oneProt[, numberOfReplicateCount:= sum(Imputed==0), by = Condition ]
   infoConds <- infoConds[, precentageOfReplicates:= sum(Imputed==0)/length(Replicate), by = Condition ]

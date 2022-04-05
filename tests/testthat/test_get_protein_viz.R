@@ -21,6 +21,7 @@ test_that("Test Files written as expected", {
   
   current = read_json("tmp/protein_counts_and_intensity.json", simplifyVector = T)
   expected = read_json("../data/expected_protein_counts_and_intensity.json", simplifyVector = T)
+  expect_equal(current$conditions, expected$conditions)
   expect_true(all.equal(current, expected))
   
 })
