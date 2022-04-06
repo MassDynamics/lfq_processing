@@ -80,7 +80,7 @@ generic_mq_table_reader <- function(folder, filename) {
   if (file.exists(
     file.path(folder, filename)
   )) {
-    dt <- fread(file.path(folder, filename), stringsAsFactors = F, header = T, verbose = F)
+    dt <- fread(file.path(folder, filename), stringsAsFactors = F, header = T, verbose = F, sep="\t")
     colnames(dt) <- tolower(colnames(dt))
     columns_to_filter <- c("reverse", "potential contaminant", "only identified by site", "contaminant")
     if (any(columns_to_filter %in% colnames(dt))) {
