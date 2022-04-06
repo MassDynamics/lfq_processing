@@ -4,7 +4,8 @@
 lfq_read_data <- function(upload_folder, experiment_type, protein_only) {
   
   # read experiment design
-  expdes_list <- experiment_design_reader(upload_folder)
+  expdes <- experiment_design_reader(upload_folder)
+  expdes_list <- experiment_design_formatter(expdes)
   expdes <- expdes_list[[1]]
   conditions_dict <- expdes_list[[2]]
   
@@ -50,6 +51,13 @@ experiment_design_reader <- function(folder) {
   expdes <- fread(file.path(folder, 'experimentDesign_original.txt'),
                   stringsAsFactors = F, header = T, verbose = F, 
                   keepLeadingZeros = TRUE)
+
+  
+  return(expdes)
+}
+
+#' @export experiment_design_formatter
+experiment_design_formatter <- function(expdes) {
   setnames(expdes, "name", "file_name")
   expdes[, Replicate := bioRep]
   expdes[, `:=`(
@@ -60,13 +68,14 @@ experiment_design_reader <- function(folder) {
   expdes[, mqExperiment := tolower(mqExperiment)]
   expdes[, experiment := as.character(experiment)]
   
-  # remove rows with "TRUE" in remove column from experimental design.
-  #if ("remove" %in% colnames(expdes)){
-  #  cat("remove TRUE remove")
-  #  nrows_removed = sum(as.character(expdes$remove) == "TRUE")
-  #  expdes <- expdes[as.character(expdes$remove) != "TRUE"]
-  #  cat(paste("Removed this many rows:" , nrows_removed))
-  #}
+  #remove rows with "TRUE" in remove column from experimental design.
+  if ("remove" %in% colnames(expdes)){
+    cat("remove TRUE remove")
+    expdes$remove <- toupper(expdes$remove)
+    nrows_removed = sum(as.character(expdes$remove) == "TRUE")
+    expdes <- expdes[as.character(expdes$remove) != "TRUE"]
+    cat(paste("Removed this many rows:" , nrows_removed))
+  }
   
   expdes_list <- condition_name_encoder(des=expdes)
   expdes <- expdes_list[[1]]
@@ -74,6 +83,7 @@ experiment_design_reader <- function(folder) {
   
   return(list(expdes, conditions_dict))
 }
+
 
 #' @export generic_mq_table_reader
 generic_mq_table_reader <- function(folder, filename) {
