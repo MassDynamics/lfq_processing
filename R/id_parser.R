@@ -29,8 +29,8 @@ parse_id_columns <- function(prot){
   
   prot <- prot %>% mutate(
     Accession_id = case_when(
-      fasta_header_type=="uniprot" ~ str_extract(prot$`fasta headers`, '[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}'),
-      fasta_header_type=="accession" ~  str_extract(prot$`fasta headers`, '[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}'),
+      fasta_header_type=="uniprot" ~ str_extract(prot$`fasta headers`, '([OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2})\\-?[:digit:]*'),
+      fasta_header_type=="accession" ~  str_extract(prot$`fasta headers`, '([OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2})\\-?[:digit:]*'),
       fasta_header_type=="hppr" ~  prot$`fasta headers`,
       TRUE ~ sapply(strsplit(prot$`majority protein ids`, ";"), "[", 1)),
     Gene = case_when(
@@ -47,9 +47,9 @@ parse_id_columns <- function(prot){
 #' @export match_pattern_name
 match_pattern_name <- function(fasta_header){
   
-  uniprot = '(\\w{2})\\|(\\w*)\\|(\\w*) (.*) (OS=.*)'
+  uniprot = '(\\w{2})\\|(\\w*)\\-?[0-9]*\\|(\\w*) (.*) (OS=.*)'
   con = "(CON__.*)"
-  accession = '[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}'
+  accession = '([OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2})\\-?[:digit:]*'
   hppr = '(HPRR\\d*)'
   missing_semi_colons = "^\\;*$"
   

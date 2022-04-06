@@ -52,6 +52,26 @@ test_that("Uniprot cases handled well",
           
 )
 
+test_that("Uniprot Isoform cases handled well", 
+          {
+            prot <- as.data.table(list(id = c(1,2),
+                                       `majority protein ids` = c("",""),
+                                       `fasta headers` = c(
+                                         'sp|P52480-2|KPYM_MOUSE Isoform M1 of Pyruvate kinase PKM OS=Mus musculus GN=Pkm',
+                                         'sp|P52480|KPYM_MOUSE Pyruvate kinase PKM OS=Mus musculus GN=Pkm PE=1 SV=4')
+            ))
+            prot <- parse_id_columns(prot)
+            
+            expect_equal(unique(unlist(lapply(prot$`fasta headers`, match_pattern_name))), "uniprot")            
+            expect_equal(prot$Accession_id,c("P52480-2", "P52480"))
+            expect_equal(prot$Gene[[1]],"Pkm")
+            expect_equal(prot$Gene[[2]],"Pkm")
+            expect_equal(prot$ProteinDescription[[1]]," Isoform M1 of Pyruvate kinase PKM")
+            expect_equal(prot$ProteinDescription[[2]]," Pyruvate kinase PKM")
+          }
+          
+)
+
 test_that("HPPR cases handled well", 
           {
             prot <- as.data.table(list(id = c(1,2,3,4,5,6,7),

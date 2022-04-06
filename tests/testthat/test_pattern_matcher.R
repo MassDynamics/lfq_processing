@@ -13,6 +13,15 @@ test_that("Match Uniprot correctly",
           }
 )
 
+test_that("Match Uniprot isoform correctly", 
+          {
+            
+            headerString = 'tr|Q8N2H2-1|Q8N2H2_HUMAN cDNA FLJ90785 fis, clone THYRO1001457, moderately similar to H.sapiens protein kinase C mu OS=Homo sapiens OX=9606 PE=2 SV=1'
+            expect_equal(
+              match_pattern_name(headerString), "uniprot"
+            )  
+          }
+)
 
 
 test_that("Match ups accession correctly", 
