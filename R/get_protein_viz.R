@@ -45,6 +45,7 @@ write_protein_viz <- function(prot, output_folder, conditionComparisonMapping){
              pretty = FALSE, auto_unbox = TRUE, digits = NA, na = "string")
 }
 
+#' @export prep_comparison_table
 prep_comparison_table <- function(prot, comparison){
 
   prot <- parse_id_columns(prot)

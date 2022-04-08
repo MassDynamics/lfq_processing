@@ -107,19 +107,56 @@ generic_mq_table_reader <- function(folder, filename) {
   
 }
 
+#' @export get_lfq_intensity_columns
 get_lfq_intensity_columns <- function(dt, des) {
-  if (any(grepl("^intensity ", colnames(dt)))) {
-    intensity_columns = str_c("intensity ",  des[, mqExperiment])
-  }
   
-  if (any(grepl("^lfq intensity ", colnames(dt)))) {
-    lfq_intensity_columns = str_c("lfq intensity ",  des[, mqExperiment])
-    intensity_columns = c(intensity_columns, lfq_intensity_columns)
+  # if all lfq intensity columns present
+  # and all intensity columns present
+    # return those as well
+  # if just intensity columns
+  # return those
+  # if just lfq intesnity columns
+  # return those
+  # else return na
+  samples_measurement_cols_needed = unique(des$mqExperiment)
+  
+  
+  # need to handle what happens when there's a column in protein groups we don't 
+  # care about it being missing cause it got removed from teh experimental design. 
+  
+  if (all_columns_present(dt, samples_measurement_cols_needed, lfq = FALSE)){
+    if (all_columns_present(dt, samples_measurement_cols_needed, lfq = TRUE)) {
+      # got all the columns we need
+      intensity_columns = str_c("intensity ",  des[, mqExperiment])
+      lfq_intensity_columns = str_c("lfq intensity ",  des[, mqExperiment])
+      intensity_columns = c(intensity_columns, lfq_intensity_columns)
+    } else {
+      # got just intensity columns
+      intensity_columns = str_c("intensity ",  des[, mqExperiment])
+    }
+  } else { # try to save with lfq intensity columns
+    if (all_columns_present(dt, samples_measurement_cols_needed, lfq = TRUE)) {
+      # got all the columns we need
+      intensity_columns = str_c("lfq intensity ",  des[, mqExperiment])
+    }
   }
+    
   if (exists("intensity_columns")) {
     return(unique(intensity_columns))
   } else {
     return(NA)
+  }
+}
+
+all_columns_present <- function(dt, samples_measurement_cols_needed, lfq = F){
+  if (lfq){
+    return(
+      all(samples_measurement_cols_needed %in% gsub("lfq intensity ", "", grep("^lfq intensity ", colnames(dt), value = T)))
+    )
+  } else {
+    return(
+      all(samples_measurement_cols_needed %in% gsub("intensity ", "", grep("^intensity ", colnames(dt), value = T)))
+      )
   }
 }
 
