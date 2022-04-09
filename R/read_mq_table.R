@@ -196,7 +196,9 @@ lfq_proteinGroup_txt_reader <- function(folder, des) {
   #cat(paste("There were ",sum(rowSums(dt[, ..intensity_columns])>0), "such rows"))
   #cat("----------------")
   #dt <- dt[rowSums(dt[, ..intensity_columns])>0,]
-  
+  if (!("score"  %in% colnames(dt))){
+    dt$score <- NA
+  }
   columns_whitelist <- c("protein ids", "majority protein ids", "q-value", "score", "peptide counts (all)", "peptide counts (razor+unique)", "peptide counts (unique)", "fasta headers", "number of proteins", "peptides",
                          "razor + unique peptides", "unique peptides", "sequence coverage [%]", "unique + razor sequence coverage [%]", "unique sequence coverage [%]", "mol. weight [kda]", "sequence length",
                          "id", "peptide ids", "evidence ids", "ms/ms ids", "best ms/ms", intensity_columns
