@@ -13,7 +13,8 @@ lfq_read_data <- function(upload_folder, experiment_type, protein_only) {
   
   
   # proteinGroups.txt
-  prot <- lfq_proteinGroup_txt_reader(upload_folder, expdes)
+  prot <- generic_mq_table_reader(upload_folder, 'proteinGroups.txt')
+  prot <- lfq_proteinGroup_txt_formatter(prot, expdes)
   
   if (!protein_only){ 
     # msms.txt
@@ -182,13 +183,9 @@ msms_txt_reader <- function(folder, des) {
   return(msms)
 }
 
-#' @export lfq_proteinGroup_txt_reader
-lfq_proteinGroup_txt_reader <- function(folder, des) {
-  # DEBUG
-  # folder = upload_folder
-  # des = expdes
-  
-  dt <- generic_mq_table_reader(folder, 'proteinGroups.txt')
+#' @export lfq_proteinGroup_txt_formatter
+lfq_proteinGroup_txt_formatter <- function(dt, des) {
+
   intensity_columns = get_lfq_intensity_columns(dt, des)
   
   # filter rows by at least one non-zero value in intensity columns
