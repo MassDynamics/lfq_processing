@@ -46,3 +46,5 @@ tests/testthat/tmp/
 tmp/
 
 **.DS_Store
+
+dev/
