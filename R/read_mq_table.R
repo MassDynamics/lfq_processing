@@ -183,6 +183,7 @@ msms_txt_reader <- function(folder, des) {
   return(msms)
 }
 
+#' @import dplyr
 #' @export lfq_proteinGroup_txt_formatter
 lfq_proteinGroup_txt_formatter <- function(dt, des) {
 
@@ -203,6 +204,12 @@ lfq_proteinGroup_txt_formatter <- function(dt, des) {
   
   dt <- dt[, columns_whitelist, with = FALSE]
   dt <- intensity_cols_to_double(dt)
+  
+  dt <- dt %>% mutate(
+    `fasta headers` = case_when(
+      `fasta headers`=="" ~ dt$`majority protein ids`,
+      TRUE ~ dt$`fasta headers`)
+  )
   
   return(dt)
 }
