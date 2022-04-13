@@ -211,6 +211,10 @@ lfq_proteinGroup_txt_formatter <- function(dt, des) {
       TRUE ~ dt$`fasta headers`)
   )
   
+  dt <- dt[!is.null(dt$id),]
+  dt <- dt[!is.na(dt$id),]
+  dt <- dt[dt$id !="",]
+  
   return(dt)
 }
 
