@@ -119,9 +119,14 @@ writeReplicateData <- function(prot_int, prot, outputFolder){
   setnames(prot_int, old = "score", new = "ProteinScore")
   setnames(prot_int, old = "q-value", new = "ProteinQValue")
   setnames(prot_int, old = "fasta headers", new = "FastaHeaders")
-  setnames(prot_int, old = "log2NInt", new = "log2NInt_ProteinGroupId")
   setnames(prot_int, old = "nRLE", new = "centeredIntensity")
   
+  if ("log2NIntNorm" %in% colnames(prot_int)){
+    setnames(prot_int, old = "log2NIntNorm", new = "log2NInt_ProteinGroupId")
+  } else {
+    setnames(prot_int, old = "log2NInt", new = "log2NInt_ProteinGroupId")
+  }
+
   proteinSet <- unique(prot_int$ProteinGroupId)
   
   # work out how many cores to use
