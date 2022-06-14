@@ -125,7 +125,7 @@ tmt_quant_analysis <- function(dt, des, id_var = "id",
     id.vars = id_var,
     measure.vars = measure_vars,
     value.name = "intensity",
-    variable.name = "reporter_channel"
+    variable.name = "experimental_measure" # this is a row in the exp design
   )
   stopifnot("intensity" %in% colnames(dt_int))
 
@@ -139,10 +139,13 @@ tmt_quant_analysis <- function(dt, des, id_var = "id",
   dt_int[intensity > 0 , log2NInt := log2(intensity)]
 
   # extract info from columns
-  dt_int[, experiment := mygsub("reporter intensity .?.?.? ?corrected [0-9]+? (.*)", reporter_channel)]
+  dt_int[, experiment := mygsub("reporter intensity .?.?.? ?corrected [0-9]+? (.*)", experimental_measure)]
   dt_int[, experiment := tolower(experiment)]
-  dt_int[, reporter_channel := mygsub("reporter intensity .?.?.? ?corrected ([0-9]+?) ?.*", reporter_channel)]
+  dt_int[, reporter_channel := mygsub("reporter intensity .?.?.? ?corrected ([0-9]+?) .*", experimental_measure)]
 
+  # check all measure vars are in exp design 
+  stopifnot(length(measure_vars)==nrow(unique(dt_int[,c("experimental_measure", "reporter_channel", "experiment")])))
+  
   # perform median subtraction for each reporter_channel group
   # reporter channel + condition level median subtraction
   dt_int[Imputed == F, ExpChannelMedian := median(log2NInt), by = list(reporter_channel,experiment)]

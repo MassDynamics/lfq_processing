@@ -140,4 +140,33 @@ test_that("Returns tmt intensity when no file name",
                            "reporter intensity corrected 5"))
           })
 
-
+test_that("Returns tmt intensity columns for case where digits get cut off", 
+          {
+            
+            des = as.data.table(list(
+              experiment = c("EV", "EV", "EV", "EV", "EV"),
+              condition = c("A","B","A", "B","A"),
+              fraction = c(0,0,0,0,0,0,0),
+              experiment = c("","","","",""),
+              remove = c(FALSE,FALSE,FALSE,FALSE,FALSE),
+              mqExperiment = c("sample1rep1","sample1rep2","sample1rep3"),
+              Replicate = c(1,1,2,2,3),
+              reporter_channel = c(1,2,3,4,5)
+            ))
+            
+            dt = as.data.table(list(
+              fasta_headers = c("blablabla","blablabla2"),
+              `reporter intensity corrected 1 10` = c(1,1),
+              `reporter intensity corrected 1 1` = c(1,1),
+              `reporter intensity corrected 10 1` = c(1,1),
+              `reporter intensity corrected 10 10` = c(1,1)
+            )
+            )
+            
+            tmt_intensity_cols = get_tmt_intensity_columns(dt, des)
+            expect_equal(tmt_intensity_cols,
+                         c("reporter intensity corrected 1 10",
+                           "reporter intensity corrected 1 1",
+                           "reporter intensity corrected 10 1",
+                           "reporter intensity corrected 10 10"))
+          })
