@@ -12,13 +12,17 @@ get_protein_viz <- function(prot, prot_int, output_folder, conditionComparisonMa
   start = Sys.time()
   write_protein_viz(prot, output_folder, conditionComparisonMapping)
   end = Sys.time()
+  cat("\n")
   cat(end-start)
+  cat("\n")
   
   cat("Writing Protein Counts and Intensities")
   start_time <- Sys.time()
   writeReplicateData(prot_int, prot, output_folder)
   end_time <- Sys.time()
+  cat("\n")
   cat(end_time-start_time)
+  cat("\n")
 }
 
 #' @param prot a processed proteinGroups table
@@ -106,12 +110,13 @@ writeReplicateData <- function(prot_int, prot, outputFolder){
   prot_int$Condition = prot_int$condition
   prot_int$Replicate = prot_int$replicate
   
-  if ("replicate" %in% colnames(prot_int)){
-    setnames(prot_int, old = "replicate", new = "Replicate")
-  } else {
+  # if lfq then replicate is the mass spec run (collapsed if fractions)
+  if ("mqExperiment" %in% colnames(prot_int)){
     setnames(prot_int, old = "mqExperiment", new = "Replicate")
+  } else if ("reporter_channel" %in% colnames(prot_int)){ # then it's labelled and we should have an exp/channel combo
+    prot_int$Replicate = paste(prot_int$reporter_channel,prot_int$experiment)
   }
-  
+
   setnames(prot_int, old = "id", new = "ProteinGroupId")
   setnames(prot_int, old = "condition", new = "Condition")
   setnames(prot_int, old = "Accession_id", new = "ProteinId")
@@ -169,9 +174,9 @@ oneProteinReplData <- function(oneProt){
     cond <- infoConds$name[cond_idx]
     infoOneCond <- infoConds[name %in% cond, ]
     
-    oneCondRepl <- data.table(oneProt)[Condition %in% cond, c("log2NInt_ProteinGroupId", "Imputed", "centeredIntensity", "z_norm")] 
-    oneCondRepl$replicateNum <- 1:nrow(oneCondRepl)
-    oneCondRepl <- oneCondRepl[,c("replicateNum","centeredIntensity", "z_norm", "log2NInt_ProteinGroupId", "Imputed")]
+    oneCondRepl <- data.table(oneProt)[Condition %in% cond, c("Replicate","log2NInt_ProteinGroupId", "Imputed", "centeredIntensity", "z_norm")] 
+    #oneCondRepl$replicateNum <- 1:nrow(oneCondRepl)
+    oneCondRepl <- oneCondRepl[,c("Replicate","centeredIntensity", "z_norm", "log2NInt_ProteinGroupId", "Imputed")]
     
     entryCond <- dplyr::tibble(infoOneCond, intensityValues=list(oneCondRepl))
     

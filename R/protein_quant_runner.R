@@ -6,7 +6,7 @@
 #' @example protein_quant_runner("../data/iPRG2015/txt/", "../data/iPRG2015/txt/transform")
 #' @import data.table
 #' @export protein_quant_runner
-protein_quant_runner <- function(upload_folder, output_folder, protein_only = FALSE) {
+protein_quant_runner <- function(upload_folder, output_folder, protein_only = FALSE, write_qc = TRUE) {
   
   dir.create(output_folder, showWarnings = FALSE)
   
@@ -69,10 +69,10 @@ protein_quant_runner <- function(upload_folder, output_folder, protein_only = FA
     start_time <- Sys.time()
     
     protein_groups <- tmt_proteinGroup_txt_reader(upload_folder)
-    des <- fread(file.path(upload_folder, "experimentDesign_original.txt"))
+    expdes <- fread(file.path(upload_folder, "experimentDesign_original.txt"))
     
-    if (all(is.na(des$experiment))){ #if there's no lcms-run-name  you're in trouble
-      if (!any(duplicated(des$reporter_channel))){
+    if (all(is.na(expdes$experiment))){ #if there's no lcms-run-name  you're in trouble
+      if (!any(duplicated(expdes$reporter_channel))){
         #if reporter channels are used once, you're ok
         # do a rescue
         cat("Single Run TMT experiment. Experiment name is blank")
@@ -82,13 +82,13 @@ protein_quant_runner <- function(upload_folder, output_folder, protein_only = FA
         stop()
       }
     }
-    stopifnot(!(all(is.na(des$experiment))))
+    stopifnot(!(all(is.na(expdes$experiment))))
     
-    des$reporter_channel <- as.character(des$reporter_channel)
-    verify_tmt_des(des)
+    expdes$reporter_channel <- as.character(expdes$reporter_channel)
+    verify_tmt_des(expdes)
     
     tmp <- tmt_transformer(protein_groups,
-                           des,
+                           expdes,
                            output_folder,
                            imputeStDev=0.3,
                            imputePosition=1.8)
@@ -97,7 +97,7 @@ protein_quant_runner <- function(upload_folder, output_folder, protein_only = FA
     
     prot = tmp[[1]]
     prot_int = tmp[[2]]
-    des = tmp[[3]]
+    expdes = tmp[[3]]
     conditionComparisonMapping = tmp[[4]]
     rm(tmp)
     
@@ -111,13 +111,13 @@ protein_quant_runner <- function(upload_folder, output_folder, protein_only = FA
     print(experiment_type)
   }
   
-  # temporarily turn off qc report
-  output_format = "html"
-  rmarkdown::render(file.path(output_folder, "QC_Report.Rmd"))
-  output_format = "pdf"
-  rmarkdown::render(file.path(output_folder, "QC_Report.Rmd"), output_format="pdf_document")
-  
-  
+  if (write_qc){
+    output_format = "html"
+    rmarkdown::render(file.path(output_folder, "QC_Report.Rmd"))
+    output_format = "pdf"
+    rmarkdown::render(file.path(output_folder, "QC_Report.Rmd"), output_format="pdf_document")
+  }
+
   # clean up
   figs <- list.files(file.path(output_folder, "QC_Report_files/figure-html/"))
   dir.create(file.path(output_folder, "figure_html/"))
@@ -130,7 +130,7 @@ protein_quant_runner <- function(upload_folder, output_folder, protein_only = FA
               copy.mode = TRUE)
   }
   
- # unlink(file.path(output_folder, "QC_Report_files/"), recursive = TRUE)
+  #unlink(file.path(output_folder, "QC_Report_files/"), recursive = TRUE)
   #unlink(file.path(output_folder, "qc_report_files"), recursive = TRUE)
   #unlink(file.path(output_folder, "QC_Report.Rmd"), recursive = TRUE)
   
