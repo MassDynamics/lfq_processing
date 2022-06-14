@@ -134,7 +134,7 @@ protein_quant_runner <- function(upload_folder, output_folder, protein_only = FA
   #unlink(file.path(output_folder, "qc_report_files"), recursive = TRUE)
   #unlink(file.path(output_folder, "QC_Report.Rmd"), recursive = TRUE)
   
-  fwrite(expdes, file.path(output_folder,"experimentDesing_output.txt"), sep ="\t")
+  fwrite(expdes, file.path(output_folder,"experimentDesign_output.txt"), sep ="\t")
   
   rm(pept)
   rm(pept_int)
