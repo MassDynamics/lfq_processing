@@ -72,7 +72,6 @@ library(bit64)
 
 ```{r, eval=TRUE, warning=FALSE, echo=FALSE, error=FALSE, message=FALSE}
 #assert that all the stuff we need is there. 
-expdes <- des
 stopifnot(exists("expdes"))
 stopifnot(exists("prot"))
 stopifnot(exists("prot_int"))
@@ -358,7 +357,7 @@ int_corr_dt <- dcast.data.table(
 \hfill\break
 ```{r, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
 # need to understand what replicate PC means for prot_int with TMT
-num_files <- nrow(des)
+num_files <- nrow(expdes)
 dt <- unique(prot_int[Imputed == 0, .(ReplicatePC = .N/num_files), by = .(id)])
 
 ymax <- max(dt[, .N, by = .(ReplicatePC)][, N])
