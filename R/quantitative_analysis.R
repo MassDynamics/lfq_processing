@@ -115,38 +115,9 @@ tmt_quant_analysis <- function(dt, des, id_var = "id",
   
   has_fractions <- detect_fractions(des)
   colnames(des) <- tolower(colnames(des))
+  print(colnames(des))
   
-  #colnames(dt) <- gsub(" ", ".", colnames(dt))
-  measure_regex_channel = "reporter intensity corrected [0-9]*\\s\\s?"
-  measure_vars = grep(measure_regex_channel, colnames(dt), value = T)
-  
-  if (length(measure_vars) == 0){
-    print("Default backup: Try using single space between channel and experiment")
-    measure_regex_channel = "reporter intensity corrected [0-9]* ?"
-    measure_vars = grep(measure_regex_channel, colnames(dt), value = T)
-  }
-  
-  # if measure_vars is empty, try changing the regex for not correct
-  if (length(measure_vars) == 0){
-    print("Default backup: Try using not corrected intensities")
-    measure_regex_channel = "reporter intensity not corrected [0-9]*\\s\\s?"
-    measure_vars = grep(measure_regex_channel, colnames(dt), value = T)
-  }
-  
-  # if measure_vars is empty, try changing the regex for not correct
-  if (length(measure_vars) == 0){
-    print("Default backup: Try using not corrected intensities")
-    measure_regex_channel = "reporter intensity not corrected [0-9]* ?"
-    measure_vars = grep(measure_regex_channel, colnames(dt), value = T)
-  }
-  
-  cat("==============\n")
-  cat(paste("Number of identified measurement columns: ", length(measure_vars)),"\n")
-  cat(paste("Number of rows in experimental design: "), nrow(des),"\n")
-  
-  stopifnot(length(measure_vars) == nrow(des)) # this has to be true for 
-  # an experiment to work
-  
+  measure_vars = get_tmt_intensity_columns(dt, des)
   
   # melt data
   dt_int <- melt.data.table(
@@ -160,7 +131,6 @@ tmt_quant_analysis <- function(dt, des, id_var = "id",
 
   #print(grep(measure_regex_channel, colnames(dt), value = T))
   dt_int <- as.data.table(dt_int) # make sure it's a data table
-
 
   #get ready for imputation, log intensity column
   dt_int[, Imputed := 0L]
@@ -188,10 +158,12 @@ tmt_quant_analysis <- function(dt, des, id_var = "id",
   )
   
   
+  cat(paste("nrows dt_int:", nrow(dt_int)))
+  
   # merge channel info with experiment design
   des$experiment <- tolower(des$experiment)
-  dt_int <- merge(dt_int, des, by = c("experiment","reporter_channel"), all = T)
-  
+  dt_int <- merge(dt_int, des, by = c("experiment","reporter_channel"), all.x = T)
+  cat(paste("nrows dt_int:", nrow(dt_int)))
   # create run id's
   dt_int[, run_id := str_c(condition,experiment, replicate, sep = ".")]
   
