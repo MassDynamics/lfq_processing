@@ -1,0 +1,92 @@
+---
+title: ""
+output:
+  html_document:
+    theme: united
+    toc: yes
+    toc_float: yes
+    self_contained: false
+    lib_dir: qc_report_files
+    fig_caption: yes
+    df_print: paged
+  pdf_document:
+    toc: yes
+    toc_depth: 3
+    fig_caption: false
+  always_allow_html: true
+
+---
+
+
+```{r, eval=TRUE, warning=FALSE, echo=FALSE, error=FALSE, message=FALSE}
+knitr::opts_chunk$set(fig.cap = NULL)
+
+library(knitr)
+library(data.table)
+library(ggplot2)
+library(ggrepel)
+library(GGally)
+library(umap)
+library(FactoMineR)
+library(factoextra)
+library(corrplot)
+library(viridis)
+library(ggpubr)
+library(Hmisc)
+library(plotly)
+library(stringr)
+library(bit64)
+```
+
+```{r, eval=TRUE, warning=FALSE, echo=FALSE, error=FALSE, message=FALSE}
+#assert that all the stuff we need is there. 
+stopifnot(exists("expdes"))
+stopifnot(exists("prot"))
+stopifnot(exists("prot_int"))
+
+if (file.exists(file.path(upload_folder,"evidence.txt"))){
+  evidence <- generic_mq_table_reader(upload_folder, 'evidence.txt')
+}
+```
+
+
+```{r eval=TRUE, warning=FALSE, echo=FALSE, error=FALSE, message=FALSE, results='asis'}
+expdes <- expdes[,c("condition", "experiment", "reporter_channel", "replicate")]
+```
+
+
+
+```{r, eval=TRUE, warning=FALSE, echo=FALSE, error=FALSE, message=FALSE}
+pca_dt <- prot_int[, .(
+  id,
+  condition,
+  replicate,
+  log2NIntNorm,
+  run_id
+)]
+
+pca_dt <- dcast(pca_dt, condition + replicate ~ id, value.var = "log2NIntNorm")
+
+
+
+num_dimensions = min(pca_dt[, .N-1], 10)
+res.pca <- PCA(pca_dt[, 3:ncol(pca_dt)], graph = FALSE, ncp = num_dimensions)
+eig.val <- get_eigenvalue(res.pca)
+eig.val <- data.table(dims = rownames(eig.val), eig.val)
+```
+
+```{r, eval=TRUE, warning=FALSE, echo=FALSE, error=FALSE, message=FALSE}
+
+scree_plot <- ggplot(eig.val[1:num_dimensions], aes(x=reorder(dims, -`variance.percent`), y=`variance.percent`)) +
+  geom_bar(stat="identity", fill = "skyblue2") +
+  theme_minimal() +
+  geom_text_repel(aes(label=(round(`variance.percent`,1))), direction = 'y') +
+  scale_x_discrete("PCA components") +
+  scale_y_continuous("% Variance")
+
+
+ggplotly(scree_plot, tooltip = c("y")) %>% config(displayModeBar = T, 
+                                           modeBarButtons = list(list('toImage')),
+                                           displaylogo = F)
+
+```

@@ -1,0 +1,81 @@
+---
+title: ""
+output:
+  html_document:
+    theme: united
+    toc: yes
+    toc_float: yes
+    self_contained: false
+    lib_dir: qc_report_files
+    fig_caption: yes
+    df_print: paged
+  pdf_document:
+    toc: yes
+    toc_depth: 3
+    fig_caption: false
+  always_allow_html: true
+
+---
+
+
+
+```{r, eval=TRUE, warning=FALSE, echo=FALSE, error=FALSE, message=FALSE}
+knitr::opts_chunk$set(fig.cap = NULL)
+
+library(knitr)
+library(data.table)
+library(ggplot2)
+library(ggrepel)
+library(GGally)
+library(umap)
+library(FactoMineR)
+library(factoextra)
+library(corrplot)
+library(viridis)
+library(ggpubr)
+library(Hmisc)
+library(plotly)
+library(stringr)
+library(bit64)
+```
+
+```{r, eval=TRUE, warning=FALSE, echo=FALSE, error=FALSE, message=FALSE}
+#assert that all the stuff we need is there. 
+stopifnot(exists("expdes"))
+stopifnot(exists("prot"))
+stopifnot(exists("prot_int"))
+
+if (file.exists(file.path(upload_folder,"evidence.txt"))){
+  evidence <- generic_mq_table_reader(upload_folder, 'evidence.txt')
+}
+```
+
+```{r eval=TRUE, warning=FALSE, echo=FALSE, error=FALSE, message=FALSE, results='asis'}
+expdes <- expdes[,c("condition", "experiment", "reporter_channel", "replicate")]
+```
+
+```{r, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
+
+if (exists("evidence")){
+  
+  evidence$`raw file` <- as.character(evidence$`raw file`)
+  p <- ggplot(evidence, aes(x = `raw file`, y = pif, fill = '#AEC6CF', colour = '#AEC6CF')) +
+    geom_boxplot() +
+    #geom_violin() +
+    theme_minimal() +
+    #coord_cartesian(ylim = c(0, boxplot.stats(fdt[, fwhm])$stats[ 5])) +
+     theme(axis.text.x = element_text(angle = 90, vjust = 0.2),
+          panel.grid.major.y = element_blank(),
+          panel.border = element_blank(),
+          axis.ticks.y = element_blank(),
+          legend.position = "none"
+    ) +
+    scale_x_discrete("Raw File") +
+    scale_y_continuous("Precursor Ion Fraction")
+    p
+
+
+} else {
+  cat("Please upload your evidence.txt file to include Precursor Ion Fraction Statistics in this QC report.")
+}
+```

@@ -1,0 +1,138 @@
+---
+title: ""
+output:
+  html_document:
+    theme: united
+    toc: no
+    self_contained: false
+    lib_dir: qc_report_files
+    fig_caption: yes
+  pdf_document:
+    toc: no
+    fig_caption: false
+  always_allow_html: true
+---
+
+```{r eval=TRUE, echo=FALSE, error=FALSE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(fig.cap = NULL)
+
+library(data.table)
+library(ggplot2)
+library(ggrepel)
+library(GGally)
+library(umap)
+library(FactoMineR)
+library(factoextra)
+library(corrplot)
+library(viridis)
+library(ggpubr)
+library(Hmisc)
+library(plotly)
+library(stringr)
+library(bit64)
+
+num_files <- expdes[, .N]
+run_per_condition <- expdes[, .(countRepMax = .N), by = .(experiment)]
+setnames(run_per_condition, "experiment", "condition")
+
+# for fractions, create file name from mqExperiment and Fraction
+if (!("file_name" %in% colnames(expdes))){
+  expdes$file_name = paste(expdes$experiment, " - ", expdes$Replicate)
+}
+
+
+if (!protein_only){
+  mod_pept_int_rep <- merge(
+    run_per_condition,
+    mod_pept_int[Imputed == 0, .(Repcount = .N), by = .(id, condition)],
+    by = c("condition")
+  )
+  mod_pept_int_rep[, repPC := Repcount/countRepMax]
+  mod_pept_id_in_a_cond <- mod_pept_int_rep[repPC >= 0.5, unique(id)]
+  mod_pept_int[, Valid := 0L]
+  mod_pept_int[id %in% mod_pept_id_in_a_cond, Valid := 1L]
+  rm(mod_pept_id_in_a_cond, mod_pept_int_rep)
+  
+  pept_int_rep <- merge(
+    run_per_condition,
+    pept_int[Imputed == 0, .(Repcount = .N), by = .(id, condition)],
+    by = c("condition")
+  )
+  pept_int_rep[, repPC := Repcount/countRepMax]
+  pept_id_in_a_cond <- pept_int_rep[repPC >= 0.5, unique(id)]
+  pept_int[, Valid := 0L]
+  pept_int[id %in% pept_id_in_a_cond, Valid := 1L]
+  rm(pept_id_in_a_cond, pept_int_rep)
+  
+}
+
+prot_int_rep <- merge(
+  run_per_condition,
+  prot_int[Imputed == 0, .(Repcount = .N), by = .(id, condition)],
+  by = c("condition")
+)
+prot_int_rep[, repPC := Repcount/countRepMax]
+prot_id_in_a_cond <- prot_int_rep[repPC >= 0.5, unique(id)]
+prot_int[, Valid := 0L]
+prot_int[id %in% prot_id_in_a_cond, Valid := 1L]
+rm(prot_id_in_a_cond, prot_int_rep)
+
+
+```
+
+
+```{r, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
+pca_dt <- mod_pept_int[Valid == 1, .(
+  id,
+  condition,
+  Replicate,
+  log2NInt,
+  run_id
+)]
+pca_dt <- dcast(pca_dt, condition + Replicate ~ id, value.var = "log2NInt")
+```
+
+
+```{r, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
+name_of_column <- colnames(mod_pept)[colnames(mod_pept) == "adj.P.Val"]
+if (!identical(name_of_column, character(0)) && mod_pept[get(name_of_column) <= 0.05, .N] > 1) {
+  DE_ids <- mod_pept[get(name_of_column) <= 0.05, unique(id)]
+  pca_dt <- mod_pept_int[id %in% DE_ids, .(
+    id,
+    condition,
+    Replicate,
+    log2NInt
+  )]
+  pca_dt <- dcast(pca_dt, condition + Replicate ~ id, value.var = "log2NInt")
+  
+  num_dimensions = min(pca_dt[, .N-1], 10)
+  res.pca <- PCA(pca_dt[, 3:ncol(pca_dt)], graph = FALSE, ncp = num_dimensions)
+  eig.val <- get_eigenvalue(res.pca)
+  eig.val <- data.table(dims = rownames(eig.val), eig.val)
+  
+  samples.pca <- get_pca_ind(res.pca)
+  samples.coord <- data.table(pca_dt[, 1:2], samples.pca$coord)
+  samples.coord[, Run := str_c(condition, Replicate, sep = " - ")]
+  
+  
+  #if no fracs
+  samples.coord = merge(samples.coord, expdes, by.x = c("condition", "Replicate"), by.y = c("experiment", "Replicate"))
+  label = "file_name"
+  
+  
+  p <- ggplot(samples.coord, aes(x = Dim.1, y=Dim.2, colour=condition, fill=condition, label=Run)) +
+    stat_ellipse(geom = "polygon", alpha=0.1) +
+    geom_point(size = 3, alpha = 0.7) +
+    theme_minimal() +
+    scale_x_continuous(str_c("PCA 1 - ", eig.val[dims == "Dim.1", round(variance.percent,1)], "%")) +
+    scale_y_continuous(str_c("PCA 2 - ", eig.val[dims == "Dim.2", round(variance.percent,1)], "%"))
+    #ggtitle(str_c("PCA plot using the ", length(DE_ids), " differentially expressed peptides"))
+  
+  ggplotly(p, tooltip = c("label")) %>% config(displayModeBar = T, 
+                                               modeBarButtons = list(list('toImage')),
+                                               displaylogo = F)
+ }
+
+```
+
+

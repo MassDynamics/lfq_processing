@@ -1,0 +1,103 @@
+---
+title: ""
+output:
+  html_document:
+    theme: united
+    toc: yes
+    toc_float: yes
+    self_contained: false
+    lib_dir: qc_report_files
+    fig_caption: yes
+    df_print: paged
+  pdf_document:
+    toc: yes
+    toc_depth: 3
+    fig_caption: false
+  always_allow_html: true
+
+---
+
+
+```{r, eval=TRUE, warning=FALSE, echo=FALSE, error=FALSE, message=FALSE}
+knitr::opts_chunk$set(fig.cap = NULL)
+
+library(knitr)
+library(data.table)
+library(ggplot2)
+library(ggrepel)
+library(GGally)
+library(umap)
+library(FactoMineR)
+library(factoextra)
+library(corrplot)
+library(viridis)
+library(ggpubr)
+library(Hmisc)
+library(plotly)
+library(stringr)
+library(bit64)
+```
+
+```{r, eval=TRUE, warning=FALSE, echo=FALSE, error=FALSE, message=FALSE}
+#assert that all the stuff we need is there. 
+stopifnot(exists("expdes"))
+stopifnot(exists("prot"))
+stopifnot(exists("prot_int"))
+
+if (file.exists(file.path(upload_folder,"evidence.txt"))){
+  evidence <- generic_mq_table_reader(upload_folder, 'evidence.txt')
+}
+```
+
+
+```{r eval=TRUE, warning=FALSE, echo=FALSE, error=FALSE, message=FALSE, results='asis'}
+expdes <- expdes[,c("condition", "experiment", "reporter_channel", "replicate")]
+```
+
+
+
+```{r, eval=TRUE, warning=FALSE, echo=FALSE, error=FALSE, message=FALSE}
+pca_dt <- prot_int[, .(
+  id,
+  condition,
+  replicate,
+  log2NIntNorm,
+  run_id
+)]
+```
+
+
+```{r, eval=TRUE, warning=FALSE, echo=FALSE, error=FALSE, message=FALSE}
+name_of_column <- colnames(prot)[colnames(prot) == "adj.P.Val"]
+if (!identical(name_of_column, character(0)) && prot[get(name_of_column) <= 0.05, .N] > 1) {
+  DE_ids <- prot[get(name_of_column) <= 0.05, unique(id)]
+  pca_dt <- prot_int[id %in% DE_ids, .(
+    id,
+    condition,
+    replicate,
+    log2NIntNorm
+  )]
+  pca_dt <- dcast(pca_dt, condition + replicate ~ id, value.var = "log2NIntNorm")
+
+  num_dimensions = min(pca_dt[, .N-1], 10)
+  res.pca <- PCA(pca_dt[, 3:ncol(pca_dt)], graph = FALSE, ncp = num_dimensions)
+  eig.val <- get_eigenvalue(res.pca)
+  eig.val <- data.table(dims = rownames(eig.val), eig.val)
+
+  samples.pca <- get_pca_ind(res.pca)
+  samples.coord <- data.table(pca_dt[, 1:2], samples.pca$coord)
+  samples.coord[, Run := str_c(condition, replicate, sep = " - ")]
+
+  p <- ggplot(samples.coord, aes(x = Dim.1, y=Dim.2, colour=condition, fill=condition, label=Run)) +
+    stat_ellipse(geom = "polygon", alpha=0.1) +
+    geom_point(size = 3, alpha = 0.7) +
+    theme_minimal() +
+    scale_x_continuous(str_c("PCA 1 - ", eig.val[dims == "Dim.1", round(variance.percent,1)], "%")) +
+    scale_y_continuous(str_c("PCA 2 - ", eig.val[dims == "Dim.2", round(variance.percent,1)], "%"))
+    #ggtitle(str_c("PCA plot using the ", length(DE_ids), " DE proteins"))
+
+  ggplotly(p, tooltip = c("label")) %>% config(displayModeBar = T, 
+                                                 modeBarButtons = list(list('toImage')),
+                                                 displaylogo = F)
+}
+```

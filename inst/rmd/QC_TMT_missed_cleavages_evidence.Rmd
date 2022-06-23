@@ -1,0 +1,80 @@
+---
+title: ""
+output:
+  html_document:
+    theme: united
+    toc: yes
+    toc_float: yes
+    self_contained: false
+    lib_dir: qc_report_files
+    fig_caption: yes
+    df_print: paged
+  pdf_document:
+    toc: yes
+    toc_depth: 3
+    fig_caption: false
+  always_allow_html: true
+
+---
+
+
+
+```{r, eval=TRUE, warning=FALSE, echo=FALSE, error=FALSE, message=FALSE}
+knitr::opts_chunk$set(fig.cap = NULL)
+
+library(knitr)
+library(data.table)
+library(ggplot2)
+library(ggrepel)
+library(GGally)
+library(umap)
+library(FactoMineR)
+library(factoextra)
+library(corrplot)
+library(viridis)
+library(ggpubr)
+library(Hmisc)
+library(plotly)
+library(stringr)
+library(bit64)
+```
+
+```{r, eval=TRUE, warning=FALSE, echo=FALSE, error=FALSE, message=FALSE}
+#assert that all the stuff we need is there. 
+stopifnot(exists("expdes"))
+stopifnot(exists("prot"))
+stopifnot(exists("prot_int"))
+
+if (file.exists(file.path(upload_folder,"evidence.txt"))){
+  evidence <- generic_mq_table_reader(upload_folder, 'evidence.txt')
+}
+```
+
+
+```{r, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
+if (exists("evidence")){
+  dt <- copy(evidence)
+  
+  dt <- dt[, .(percent = .N), by = .(`missed cleavages`, `raw file`)]
+  
+  dt[, `missed cleavages` := as.factor(`missed cleavages`)]
+  p <- ggplot(dt, aes(x = `raw file`, y = percent,  fill=`missed cleavages`, label=`raw file`)) +
+    geom_bar(stat="identity", position=position_fill(reverse = TRUE)) +
+    theme_minimal() +
+    scale_y_continuous("% missed c leavages", labels = scales::percent) +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.2),
+          panel.grid.major.y = element_blank(),
+          panel.border = element_blank(),
+          axis.ticks.y = element_blank(),
+          legend.position = "top"
+    ) +
+    labs(fill = "Missed\nCleavages")
+  
+    ggplotly(p, tooltip = c("y")) %>% config(displayModeBar = T, 
+                                             modeBarButtons = list(list('toImage')),
+                                             displaylogo = F)
+  
+} else {
+  cat("Please upload your evidence.txt file to include Missed Cleavage Statistics in this QC report.")
+}
+```
