@@ -506,6 +506,28 @@ if (output_format == "pdf"){
 }
 ```
 
+\newpage
+
+# 3. Identifications
+
+## A. Counts {.tabset .tabset-fade .tabset-pills}
+
+
+<details>
+  <summary>Identifications Details</summary>
+  <span>
+    <p>Identifications of PSM’s (peptide spectral matches), peptides and proteins are a measure of the number of inferences we make at each of those levels as a result of each run.</p>
+    <p>Low counts in a run may suggest a systematic flaw in the experiment that needs to be addressed prior to interpretation.</p>
+    <p>Counts are extracted from your data in two ways. If your data has fractions, at the fraction level from evidence.txt or msms.txt and at the replicate level from the corresponding file (eg: proteinGroups.txt for proteins.)</p>
+  </span>
+</details> 
+
+\newpage
+
+### Proteins
+
+\hfill\break
+
 ```{r, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
 dt <- copy(prot_int[Imputed == 0])
 
