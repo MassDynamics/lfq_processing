@@ -13,10 +13,12 @@ output:
     toc_depth: 3
     fig_caption: false
   always_allow_html: true
+params:
+  output_figure: figures
 ---
 
 ```{r eval=TRUE, echo=FALSE, error=FALSE, message=FALSE, warning=FALSE}
-knitr::opts_chunk$set(fig.cap = NULL)
+knitr::opts_chunk$set(fig.cap = NULL, fig.path = params$output_figure)
 
 library(data.table)
 library(ggplot2)
@@ -41,44 +43,6 @@ setnames(run_per_condition, "experiment", "condition")
 if (!("file_name" %in% colnames(expdes))){
   expdes$file_name = paste(expdes$experiment, " - ", expdes$Replicate)
 }
-
-
-if (!protein_only){
-  mod_pept_int_rep <- merge(
-    run_per_condition,
-    mod_pept_int[Imputed == 0, .(Repcount = .N), by = .(id, condition)],
-    by = c("condition")
-  )
-  mod_pept_int_rep[, repPC := Repcount/countRepMax]
-  mod_pept_id_in_a_cond <- mod_pept_int_rep[repPC >= 0.5, unique(id)]
-  mod_pept_int[, Valid := 0L]
-  mod_pept_int[id %in% mod_pept_id_in_a_cond, Valid := 1L]
-  rm(mod_pept_id_in_a_cond, mod_pept_int_rep)
-  
-  pept_int_rep <- merge(
-    run_per_condition,
-    pept_int[Imputed == 0, .(Repcount = .N), by = .(id, condition)],
-    by = c("condition")
-  )
-  pept_int_rep[, repPC := Repcount/countRepMax]
-  pept_id_in_a_cond <- pept_int_rep[repPC >= 0.5, unique(id)]
-  pept_int[, Valid := 0L]
-  pept_int[id %in% pept_id_in_a_cond, Valid := 1L]
-  rm(pept_id_in_a_cond, pept_int_rep)
-  
-}
-
-prot_int_rep <- merge(
-  run_per_condition,
-  prot_int[Imputed == 0, .(Repcount = .N), by = .(id, condition)],
-  by = c("condition")
-)
-prot_int_rep[, repPC := Repcount/countRepMax]
-prot_id_in_a_cond <- prot_int_rep[repPC >= 0.5, unique(id)]
-prot_int[, Valid := 0L]
-prot_int[id %in% prot_id_in_a_cond, Valid := 1L]
-rm(prot_id_in_a_cond, prot_int_rep)
-
 
 ```
 

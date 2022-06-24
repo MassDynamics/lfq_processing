@@ -4,7 +4,12 @@
 \alias{protein_quant_runner}
 \title{Run Pairwise Protein Quantification and Quality Control on Maxquant output}
 \usage{
-protein_quant_runner(upload_folder, output_folder, protein_only = FALSE)
+protein_quant_runner(
+  upload_folder,
+  output_folder,
+  protein_only = FALSE,
+  write_qc = TRUE
+)
 }
 \arguments{
 \item{output_folder}{An output folder to store produced files.}

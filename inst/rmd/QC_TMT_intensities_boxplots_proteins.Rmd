@@ -14,13 +14,12 @@ output:
     toc_depth: 3
     fig_caption: false
   always_allow_html: true
-
+params:
+  output_figure: figures
 ---
 
-
-
-```{r, eval=TRUE, warning=FALSE, echo=FALSE, error=FALSE, message=FALSE}
-knitr::opts_chunk$set(fig.cap = NULL)
+```{r eval=TRUE, echo=FALSE, error=FALSE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(fig.cap = NULL, fig.path = params$output_figure)
 
 library(knitr)
 library(data.table)
@@ -45,9 +44,6 @@ stopifnot(exists("expdes"))
 stopifnot(exists("prot"))
 stopifnot(exists("prot_int"))
 
-if (file.exists(file.path(upload_folder,"evidence.txt"))){
-  evidence <- generic_mq_table_reader(upload_folder, 'evidence.txt')
-}
 ```
 
 ```{r eval=TRUE, warning=FALSE, echo=FALSE, error=FALSE, message=FALSE, results='asis'}

@@ -11,12 +11,14 @@ output:
     toc: no
     fig_caption: false
   always_allow_html: true
+params:
+  output_figure: figures
 ---
 
 
 
 ```{r eval=TRUE, echo=FALSE, error=FALSE, message=FALSE, warning=FALSE}
-knitr::opts_chunk$set(fig.cap = NULL)
+knitr::opts_chunk$set(fig.cap = NULL, fig.path = params$output_figure)
 
 library(data.table)
 library(ggplot2)

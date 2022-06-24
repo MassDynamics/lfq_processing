@@ -50,13 +50,58 @@ protein_quant_runner <- function(upload_folder, output_folder, protein_only = FA
                 to=output_folder,
                 overwrite = TRUE, recursive = TRUE,
                 copy.mode = TRUE)
+      
+      print("\nCopy all separate QCs\n")
+      all_qcs <- LFQProcessing:::get_names_qc_lfq_all()
+      
+      for(qc_name in all_qcs){
+        qc_report_name <- paste0("QC_", qc_name, ".Rmd")
+        file.copy(from=system.file("rmd", qc_report_name, package = "LFQProcessing"),
+                  to=file.path(output_folder, qc_report_name),
+                  overwrite = TRUE, recursive = TRUE,
+                  copy.mode = TRUE)
+        
+        # I need to run it here as I need datasets loaded in the environment
+        rmarkdown::render(file.path(output_folder, qc_report_name), 
+                          params = list(output_figure = file.path(output_folder, "figure_html_separate/")),
+                          output_format = rmarkdown::html_document(
+                            self_contained=FALSE)
+        )
+        
+      }
+      
     } else {
       # get qc report from package
       file.copy(from=system.file("rmd","QC_Report_protein_only.Rmd", package = "LFQProcessing"),
                 to=file.path(output_folder,"QC_Report.Rmd"),
                 overwrite = TRUE, recursive = TRUE,
                 copy.mode = TRUE)
+      
+      print("\nCopy protein only separate QCs\n")
+      protein_only_split_qc <- LFQProcessing:::get_names_qc_lfq_protein_only()
+      
+      for(qc_name in protein_only_split_qc){
+        qc_report_name <- paste0("QC_", qc_name, ".Rmd")
+        print(paste0("RENDER:", qc_name))
+        file.copy(from=system.file("rmd", qc_report_name, package = "LFQProcessing"),
+                  to=file.path(output_folder,qc_report_name),
+                  overwrite = TRUE, recursive = TRUE,
+                  copy.mode = TRUE)
+        
+        # I need to run it here as I need datasets loaded in the environment
+        rmarkdown::render(file.path(output_folder, qc_report_name), 
+                          params = list(output_figure = file.path(output_folder, "figure_html_separate/")),
+                          output_format = rmarkdown::html_document(
+                            self_contained=FALSE)
+        )
+        
+      }
+      
+      
     }
+    
+    # Cleanup the seraparet QCs
+    rmd_serparate_qc_cleanup(output_folder)
     
     rm(tmp)
     
@@ -107,6 +152,50 @@ protein_quant_runner <- function(upload_folder, output_folder, protein_only = FA
               overwrite = TRUE, recursive = TRUE,
               copy.mode = TRUE)
     
+    print("\nCopy separate QCs\n")
+    names_tmt_protein_only <- LFQProcessing:::get_names_qc_tmt_protein_only(evidence=FALSE)
+    
+    for(qc_name in names_tmt_protein_only){
+      qc_report_name <- paste0("QC_", qc_name, ".Rmd")
+      file.copy(from=system.file("rmd",qc_report_name, package = "LFQProcessing"),
+                to=file.path(output_folder,qc_report_name),
+                overwrite = TRUE, recursive = TRUE,
+                copy.mode = TRUE)
+      
+      # I need to run it here as I need datasets loaded in the environment
+      rmarkdown::render(file.path(output_folder, qc_report_name), 
+                        params = list(output_figure = file.path(output_folder, "figure_html_separate/")),
+                        output_format = rmarkdown::html_document(
+                          self_contained=FALSE)
+      )
+      
+    }
+      
+    if (exists("evidence")){
+      names_tmt_evidence <- LFQProcessing:::get_names_qc_tmt_protein_only(evidence=TRUE)
+      
+      for(qc_name in names_tmt_evidence){
+        qc_report_name <- paste0("QC_", qc_name, ".Rmd")
+        file.copy(from=system.file("rmd",qc_report_name, package = "LFQProcessing"),
+                  to=file.path(output_folder,qc_report_name),
+                  overwrite = TRUE, recursive = TRUE,
+                  copy.mode = TRUE)
+        
+        # I need to run it here as I need datasets loaded in the environment
+        rmarkdown::render(file.path(output_folder, qc_report_name), 
+                          params = list(output_figure = file.path(output_folder, "figure_html_separate/")),
+                          output_format = rmarkdown::html_document(
+                            self_contained=FALSE)
+        )
+      }
+      
+      # Cleanup the seraparet QCs
+      rmd_serparate_qc_cleanup(output_folder)
+      
+    } else {
+      cat("Please upload your evidence.txt file to include Missed Cleavage/Parent Ion Fraction Statistics in this QC report.")
+    }
+    
   } else {
     print(experiment_type)
   }
@@ -116,6 +205,7 @@ protein_quant_runner <- function(upload_folder, output_folder, protein_only = FA
     rmarkdown::render(file.path(output_folder, "QC_Report.Rmd"))
     output_format = "pdf"
     rmarkdown::render(file.path(output_folder, "QC_Report.Rmd"), output_format="pdf_document")
+    
   }
 
   # clean up
@@ -129,7 +219,7 @@ protein_quant_runner <- function(upload_folder, output_folder, protein_only = FA
               overwrite = TRUE, recursive = TRUE,
               copy.mode = TRUE)
   }
-  
+    
   #unlink(file.path(output_folder, "QC_Report_files/"), recursive = TRUE)
   #unlink(file.path(output_folder, "qc_report_files"), recursive = TRUE)
   #unlink(file.path(output_folder, "QC_Report.Rmd"), recursive = TRUE)
