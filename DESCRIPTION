@@ -1,6 +1,6 @@
 Package: LFQProcessing
 Title: Processes Proteomics Files for Quantification.
-Version: 0.0.63
+Version: 0.0.64
 Author: Joseph Bloom <joseph@massdynamics.com> and
       Giuseppe Infusini <peppe@massdynamics.com> 
 Maintainer: The package maintainer <joseph@massdynamics.com>
@@ -9,7 +9,7 @@ License: use_mit_license()
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.0
 Depends: 
   R (>= 3.5)
 Imports:
