@@ -117,3 +117,30 @@ test_that("Missing cases handled well",
             expect_equal(unique(unlist(lapply(prot$`fasta headers`, match_pattern_name))), "missing")     
             expect_equal(prot$Accession_id, c("P08397", "P08559", "P08603", "P08670"))
           })
+
+
+test_that("Test modified accession",
+          {
+            prot <- as.data.table(list(id = c(1,2),
+                                       `majority protein ids` = c("QPatient53;QPatient52;Q14498", "QPatient53;QPatient52"),
+                                       `fasta headers` = c("sp|QPatient53|RBM39_HUMAN Isoform 3 of RNA-binding protein 39 OS=Homo sapiens OX=9606 GN=RBM39;sp|QPatient52|RBM39_HUMAN Isoform 2 of RNA-binding protein 39 OS=Homo sapiens OX=9606 GN=RBM39;sp|Q14498|RBM39_HUMAN RNA-binding protein 39 OS=Homo sapiens OX=9606 G",
+                                                           "sp|QPatient53|RBM39_HUMAN Isoform 3 of RNA-binding protein 39 OS=Homo sapiens OX=9606 GN=RBM39;sp|QPatient52|RBM39_HUMAN Isoform 2 of RNA-binding protein 39 OS=Homo sapiens OX=9606 GN=RBM39")
+            ))
+            prot <- parse_id_columns(prot)
+            
+            expect_equal(unique(unlist(lapply(prot$`fasta headers`, match_pattern_name))), c("uniprot"))    
+            expect_equal(prot$Accession_id, c("QPatient53","QPatient53"))
+          })
+
+
+test_that("Test null id",
+          {
+            prot <- as.data.table(list(id = c(1),
+                                       `majority protein ids` = c(""),
+                                       `fasta headers` = c("Not Null")
+            ))
+            prot <- parse_id_columns(prot)
+
+            expect_equal(prot$Accession_id, c("Not Null"))
+          })
+

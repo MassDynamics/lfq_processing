@@ -29,7 +29,7 @@ parse_id_columns <- function(prot){
   
   prot <- prot %>% mutate(
     Accession_id = case_when(
-      fasta_header_type=="uniprot" ~ str_extract(prot$`fasta headers`, '([OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2})\\-?[:digit:]*'),
+      fasta_header_type=="uniprot" ~ gsub('\\|', '', str_extract(prot$`fasta headers`, '\\|(.*)\\|')),
       fasta_header_type=="accession" ~  str_extract(prot$`fasta headers`, '([OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2})\\-?[:digit:]*'),
       fasta_header_type=="hppr" ~  prot$`fasta headers`,
       TRUE ~ sapply(strsplit(prot$`majority protein ids`, ";"), "[", 1)),
@@ -40,6 +40,11 @@ parse_id_columns <- function(prot){
       fasta_header_type=="uniprot" ~ gsub("\\sOS=","",str_extract(prot$`fasta headers`, "\\s.*\\sOS=")),
       TRUE ~  prot$`fasta headers`),
   )
+  prot <- prot %>% mutate(
+    Accession_id = case_when(
+      is.na(Accession_id) ~ prot$`fasta headers`,
+      TRUE ~ prot$Accession_id
+    ))
   
   prot
 }
