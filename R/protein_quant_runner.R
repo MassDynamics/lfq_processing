@@ -56,6 +56,7 @@ protein_quant_runner <- function(upload_folder, output_folder, protein_only = FA
       
       for(qc_name in all_qcs){
         qc_report_name <- paste0("QC_", qc_name, ".Rmd")
+        cat(paste("Writing ", qc_report_name))
         file.copy(from=system.file("rmd", qc_report_name, package = "LFQProcessing"),
                   to=file.path(output_folder, qc_report_name),
                   overwrite = TRUE, recursive = TRUE,
