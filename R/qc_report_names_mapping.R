@@ -38,7 +38,7 @@ get_names_qc_lfq_all <- function(){
                              "identifications_peptides", "identifications_peptides_evidence",
                              "identifications_modified_peptides", "identifications_modified_peptides_evidence",
                              
-                             "QC_missed_cleavages_evidence")
+                             "missed_cleavages_evidence")
   return(all_lfq_split_qc)
 }
 
