@@ -15,8 +15,6 @@ output:
   always_allow_html: true
 params:
   output_figure: figures
-params:
-  output_figure: figures
 ---
 
 ```{r eval=TRUE, echo=FALSE, error=FALSE, message=FALSE, warning=FALSE}
