@@ -60,7 +60,7 @@ rmd_separate_qc_call <- function(output_folder, qc_report_name){
 }
 
 
-rmd_serparate_qc_cleanup <- function(output_folder){
+rmd_separate_qc_cleanup <- function(output_folder){
   # clean up
   figs <- list.files(file.path(output_folder, "figure_html_separate/"))
   dir.create(file.path(output_folder, "figure_html_separate/"))

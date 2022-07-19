@@ -24,6 +24,14 @@ acceptance_test<- function(tolerance = 10**-3){
     
   })
   
+  test_that("The only directories are the figures directories", {
+    
+    list_dirs_in_folder <- list.dirs(file.path("../data/PXD026936", "output"), full.names = FALSE)
+    expect_true(length(list_dirs_in_folder) == 3)
+    expect_true(all(c("", "figure_html", "figure_html_separate") %in% list_dirs_in_folder))
+    
+  })
+  
 }
 
 acceptance_test()

@@ -75,8 +75,7 @@ protein_quant_runner <- function(upload_folder, output_folder, protein_only = FA
       # get qc report from package
       file.copy(from=system.file("rmd","QC_Report_protein_only.Rmd", package = "LFQProcessing"),
                 to=file.path(output_folder,"QC_Report.Rmd"),
-                overwrite = TRUE, recursive = TRUE,
-                copy.mode = TRUE)
+                overwrite = TRUE, copy.mode = TRUE)
       
       print("\nCopy protein only separate QCs\n")
       protein_only_split_qc <- LFQProcessing:::get_names_qc_lfq_protein_only()
@@ -86,8 +85,7 @@ protein_quant_runner <- function(upload_folder, output_folder, protein_only = FA
         print(paste0("RENDER:", qc_name))
         file.copy(from=system.file("rmd", qc_report_name, package = "LFQProcessing"),
                   to=file.path(output_folder,qc_report_name),
-                  overwrite = TRUE, recursive = TRUE,
-                  copy.mode = TRUE)
+                  overwrite = TRUE, copy.mode = TRUE)
         
         # I need to run it here as I need datasets loaded in the environment
         rmarkdown::render(file.path(output_folder, qc_report_name), 
@@ -102,7 +100,7 @@ protein_quant_runner <- function(upload_folder, output_folder, protein_only = FA
     }
     
     # Cleanup the seraparet QCs
-    rmd_serparate_qc_cleanup(output_folder)
+    rmd_separate_qc_cleanup(output_folder)
     
     rm(tmp)
     
@@ -191,7 +189,7 @@ protein_quant_runner <- function(upload_folder, output_folder, protein_only = FA
       }
       
       # Cleanup the seraparet QCs
-      rmd_serparate_qc_cleanup(output_folder)
+      rmd_separate_qc_cleanup(output_folder)
       
     } else {
       cat("Please upload your evidence.txt file to include Missed Cleavage/Parent Ion Fraction Statistics in this QC report.")
@@ -220,24 +218,27 @@ protein_quant_runner <- function(upload_folder, output_folder, protein_only = FA
               overwrite = TRUE, recursive = TRUE,
               copy.mode = TRUE)
   }
-    
-  #unlink(file.path(output_folder, "QC_Report_files/"), recursive = TRUE)
-  #unlink(file.path(output_folder, "qc_report_files"), recursive = TRUE)
-  #unlink(file.path(output_folder, "QC_Report.Rmd"), recursive = TRUE)
+  
+  # Cleanup upload folder  
+  list_qc_folders <- list.files(output_folder, pattern = "*_files$")
+  unlink(file.path(output_folder, list_qc_folders), recursive = TRUE)
+  list_rmd <- list.files(output_folder, pattern = "*Rmd$")
+  unlink(file.path(output_folder, list_rmd), recursive = TRUE)
   
   fwrite(expdes, file.path(output_folder,"experimentDesign_output.txt"), sep ="\t")
   
-  rm(pept)
-  rm(pept_int)
-  rm(mod_pept)
-  rm(mod_pept_int)
-  rm(expdes)
-  rm(evidence)
-  rm(msms)
-  rm(cvdt)
-  
+  suppressWarnings(rm(pept))
+  suppressWarnings(rm(pept_int))
+  suppressWarnings(rm(mod_pept))
+  suppressWarnings(rm(mod_pept_int))
+  suppressWarnings(rm(expdes))
+  suppressWarnings(rm(evidence))
+  suppressWarnings(rm(msms))
+  suppressWarnings(rm(cvdt))
+
   gc()
   
+  cat("Saving protein data rda")
   save(prot, prot_int, conditionComparisonMapping, file = file.path(output_folder,"protein_data.rda"))
   
   #Write Protein Viz
