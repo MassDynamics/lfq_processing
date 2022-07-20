@@ -1,6 +1,5 @@
 library(LFQProcessing, quietly = TRUE)
 library(testthat, quietly = TRUE)
-library(here)
 
 
 acceptance_test<- function(tolerance = 10**-3){
@@ -13,9 +12,7 @@ acceptance_test<- function(tolerance = 10**-3){
       file.remove("../data/PXD026936/output/proteinGroups_quant_intensities.txt")
     }
     
-    data_folder <- file.path(here(), "tests/data/PXD026936")
-    output_folder <- file.path(data_folder, "output")
-    protein_quant_runner("../data/PXD026936", output_folder, protein_only = TRUE)
+    protein_quant_runner("../data/PXD026936", "../data/PXD026936/output", protein_only = TRUE)
     
     current = read.table("../data/PXD026936/output/proteinGroups_quant_intensities.txt", sep = "\t", header = TRUE)
     expected = read.table("../data/PXD026936/output/expected_proteinGroups_quant_intensities.txt", sep = "\t", header = TRUE)

@@ -64,9 +64,9 @@ protein_quant_runner <- function(upload_folder, output_folder, protein_only = FA
         
         # I need to run it here as I need datasets loaded in the environment
         rmarkdown::render(file.path(output_folder, qc_report_name), 
-                          params = list(output_figure = file.path(output_folder, "figure_html_separate/")),
+                          params = list(output_figure = "figure_html_separate/"),
                           output_format = rmarkdown::html_document(
-                            self_contained=FALSE, lib_dir=file.path(output_folder,"qc_report_files"))
+                            self_contained=FALSE, lib_dir="qc_report_files")
         )
         
       }
@@ -89,9 +89,9 @@ protein_quant_runner <- function(upload_folder, output_folder, protein_only = FA
         
         # I need to run it here as I need datasets loaded in the environment
         rmarkdown::render(file.path(output_folder, qc_report_name), 
-                          params = list(output_figure = file.path(output_folder, "figure_html_separate/")),
+                          params = list(output_figure = "figure_html_separate/"),
                           output_format = rmarkdown::html_document(
-                            self_contained=FALSE, lib_dir=file.path(output_folder,"qc_report_files"))
+                            self_contained=FALSE, lib_dir="qc_report_files")
         )
         
       }
@@ -163,9 +163,9 @@ protein_quant_runner <- function(upload_folder, output_folder, protein_only = FA
       
       # I need to run it here as I need datasets loaded in the environment
       rmarkdown::render(file.path(output_folder, qc_report_name), 
-                        params = list(output_figure = file.path(output_folder, "figure_html_separate/")),
+                        params = list(output_figure = "figure_html_separate/"),
                         output_format = rmarkdown::html_document(
-                          self_contained=FALSE, lib_dir=file.path(output_folder,"qc_report_files"))
+                          self_contained=FALSE, lib_dir="qc_report_files")
       )
       
     }
@@ -181,15 +181,12 @@ protein_quant_runner <- function(upload_folder, output_folder, protein_only = FA
         
         # I need to run it here as I need datasets loaded in the environment
         rmarkdown::render(file.path(output_folder, qc_report_name), 
-                          params = list(output_figure = file.path(output_folder, "figure_html_separate/")),
+                          params = list(output_figure = "figure_html_separate/"),
                           output_format = rmarkdown::html_document(
                             self_contained=FALSE,  
-                            lib_dir=file.path(output_folder,"qc_report_files"))
+                            lib_dir="qc_report_files")
         )
       }
-      
-      # Cleanup the seraparet QCs
-      #rmd_separate_qc_cleanup(output_folder)
       
     } else {
       cat("Please upload your evidence.txt file to include Missed Cleavage/Parent Ion Fraction Statistics in this QC report.")
@@ -202,20 +199,17 @@ protein_quant_runner <- function(upload_folder, output_folder, protein_only = FA
   if (write_qc){
     output_format = "html"
     rmarkdown::render(file.path(output_folder, "QC_Report.Rmd"),
-                      params = list(output_figure = file.path(output_folder, "figure_html/")),
+                      params = list(output_figure = "figure_html/"),
                       output_format = rmarkdown::html_document(
                         self_contained=FALSE,
-                        lib_dir=file.path(output_folder,"qc_report_files")))
+                        lib_dir="qc_report_files"))
 
     output_format = "pdf"
-    output_folder_pdf <- file.path(output_folder, "pdf")
-    dir.create(output_folder_pdf)
     rmarkdown::render(file.path(output_folder, "QC_Report.Rmd"),
-                      output_file = file.path(output_folder_pdf, "QC_Report.pdf"),
                       output_format=rmarkdown::pdf_document(
                         toc = TRUE,
                         fig_caption= TRUE),
-                      params = list(output_figure = file.path(output_folder_pdf, "figure_pdf/")))
+                      params = list(output_figure = "figure_pdf/"))
 
   }
 

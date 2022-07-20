@@ -15,8 +15,8 @@ acceptance_test<- function(tolerance = 10**-3){
     
     data_folder <- file.path(here(), "tests/data/PXD020248")
     output_folder <- file.path(data_folder, "output")
-    protein_quant_runner(data_folder, 
-                         output_folder, 
+    protein_quant_runner(upload_folder = "../data/PXD020248", 
+                         output_folder = "../data/PXD020248/output", 
                          protein_only = TRUE)
     
     current = read.table("../data/PXD020248/output/proteinGroups_quant.txt", sep = "\t", header = TRUE)
