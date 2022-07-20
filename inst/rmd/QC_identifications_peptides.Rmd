@@ -101,7 +101,8 @@ p <- ggplot(dt, aes(x = as.factor(Run), y = N, color = condition, label=Replicat
         panel.grid.major.y = element_blank(),
         panel.border = element_blank(),
         axis.ticks.y = element_blank()
-        )
+        ) +
+  ggtitle("Peptides - Number of identifications from peptides.txt")
 
 
 ggplotly(p, tooltip = c("label","y")) %>% config(displayModeBar = T, 

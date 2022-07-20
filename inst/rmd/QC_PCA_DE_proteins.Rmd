@@ -92,7 +92,7 @@ pca_dt <- prot_int[Valid == 1, .(
 ```
 
 
-```{r, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
+```{r pca-de-proteins, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
 
 name_of_column <- colnames(prot)[colnames(prot) == "adj.P.Val"]
 if (!identical(name_of_column, character(0)) && prot[get(name_of_column) <= 0.05, .N] > 1) {
@@ -123,8 +123,8 @@ if (!identical(name_of_column, character(0)) && prot[get(name_of_column) <= 0.05
     geom_point(size = 3, alpha = 0.7) +
     theme_minimal() +
     scale_x_continuous(str_c("PCA 1 - ", eig.val[dims == "Dim.1", round(variance.percent,1)], "%")) +
-    scale_y_continuous(str_c("PCA 2 - ", eig.val[dims == "Dim.2", round(variance.percent,1)], "%"))
-   # ggtitle(str_c("PCA plot using the ", length(DE_ids), " differentially expressed proteins"))
+    scale_y_continuous(str_c("PCA 2 - ", eig.val[dims == "Dim.2", round(variance.percent,1)], "%")) +
+   ggtitle(str_c("PCA plot using the ", length(DE_ids), " differentially expressed proteins"))
 
     ggplotly(p, tooltip = c("label")) %>% config(displayModeBar = T, 
                                                  modeBarButtons = list(list('toImage')),

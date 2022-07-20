@@ -92,7 +92,7 @@ rm(prot_id_in_a_cond, prot_int_rep)
 
 ```
 
-```{r, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
+```{r samples-correlations-scatter-mod-pep, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
 if ("file_name" %in% colnames(prot_int)){
   filenames <- prot_int[!(is.na(file_name)), unique(run_id)]
 } else {
@@ -133,6 +133,6 @@ if (class(test) != "try-error") {
                lower = "blank",
                diag = NULL
   )
-  p
+  print(p)
 }
 ```

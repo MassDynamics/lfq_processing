@@ -69,7 +69,7 @@ if (!("file_name" %in% colnames(expdes))){
 ```
 
 
-```{r, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
+```{r missed-cleavage-evidence, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
 dt <- copy(evidence)
 
 setnames(dt, "experiment", "condition")
@@ -99,8 +99,8 @@ p <- ggplot(dt, aes(x = Run, y = percent,  fill=`missed cleavages`, label=Run)) 
         panel.border = element_blank(),
         axis.ticks.y = element_blank()
         ) +
-  scale_x_discrete(xlabel)
-
+  scale_x_discrete(xlabel) + 
+  ggtitle("Digestion efficiency")
 
 
 

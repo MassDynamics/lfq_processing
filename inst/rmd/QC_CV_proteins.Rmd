@@ -106,7 +106,7 @@ rm(prot_id_in_a_cond, prot_int_rep)
 ```
 
 
-```{r, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
+```{r cv-proteins, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
 cvdt <- prot_int[Imputed == 0][, countRep := .N, by = .(id, condition)]
 cvdt[, countRepMax := max(countRep), by = .(id, condition)]
 cvdt[, ReplicatePC := countRep/countRepMax]
@@ -116,7 +116,8 @@ cvdt <- cvdt[ReplicatePC >= 0.5, .(cv = sd(intensity)/mean(intensity)), by = .(i
 p <- ggplot(cvdt, aes(x=cv, fill=condition, colour=condition)) +
   geom_density(alpha=0.4) +
   theme_minimal() +
-  scale_x_continuous("% CV", labels = scales::percent)
+  scale_x_continuous("% CV", labels = scales::percent) +
+  ggtitle("Proteins - LFQ intensity CV")
 
 ggplotly(p) %>% config(displayModeBar = T, 
                         modeBarButtons = list(list('toImage')),

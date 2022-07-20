@@ -81,7 +81,7 @@ rm(mod_pept_id_in_a_cond, mod_pept_int_rep)
 
 
 
-```{r, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
+```{r id-mod-peptides, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
 dt <- copy(mod_pept_int[Imputed == 0])
 
 dt[is.na(condition), condition := "Library"]
@@ -101,7 +101,8 @@ p <- ggplot(dt, aes(x = as.factor(Run), y = N, color = condition, label=Replicat
         panel.grid.major.y = element_blank(),
         panel.border = element_blank(),
         axis.ticks.y = element_blank()
-        )
+        ) +
+  ggtitle("Modified Peptides - Number of identifications from modificationSpecificPeptides.txt")
 
 ggplotly(p, tooltip = c("label","y")) %>% config(displayModeBar = T, 
                                                modeBarButtons = list(list('toImage')),

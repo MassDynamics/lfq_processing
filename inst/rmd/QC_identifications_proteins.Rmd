@@ -79,7 +79,7 @@ rm(prot_id_in_a_cond, prot_int_rep)
 
 ```
 
-```{r, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
+```{r id-proteins, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
 dt <- copy(prot_int[Imputed == 0])
 
 dt[is.na(condition), condition := "Library"]
@@ -100,7 +100,8 @@ p <- ggplot(dt, aes(x = as.factor(Run), y = N, color = condition, label=Replicat
         panel.grid.major.y = element_blank(),
         panel.border = element_blank(),
         axis.ticks.y = element_blank()
-        )
+        ) +
+  ggtitle("Proteins - Number of identifications from proteinGroups.txt")
 
 ggplotly(p, tooltip = c("label","y")) %>% config(displayModeBar = T, 
                                                modeBarButtons = list(list('toImage')),

@@ -23,22 +23,23 @@ get_names_qc_lfq_all <- function(){
                              "CV_proteins", "CV_peptides", "CV_modified_peptides",
                              "missing_by_proteins", "missing_by_peptides", "missing_by_modified_peptides",
                              "missing_by_samples_proteins", "missing_by_samples_peptides", "missing_by_samples_modified_peptides",
-                             
+
                              "samples_correlations_proteins",
-                             "samples_correlations_DE_proteins", 
+                             "samples_correlations_DE_proteins",
                              "samples_correlations_scatter_proteins",
                              "samples_correlations_peptides",
-                             "samples_correlations_DE_peptides", 
+                             "samples_correlations_DE_peptides",
                              "samples_correlations_scatter_peptides",
                              "samples_correlations_modified_peptides",
-                             "samples_correlations_DE_modified_peptides", 
+                             "samples_correlations_DE_modified_peptides",
                              "samples_correlations_scatter_modified_peptides",
-                             
+
                              "identifications_proteins", "identifications_proteins_evidence",
                              "identifications_peptides", "identifications_peptides_evidence",
                              "identifications_modified_peptides", "identifications_modified_peptides_evidence",
-                             
+
                              "missed_cleavages_evidence")
+  #all_lfq_split_qc <- c("samples_correlations_proteins")
   return(all_lfq_split_qc)
 }
 

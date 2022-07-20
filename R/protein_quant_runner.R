@@ -66,9 +66,12 @@ protein_quant_runner <- function(upload_folder, output_folder, protein_only = FA
         rmarkdown::render(file.path(output_folder, qc_report_name), 
                           params = list(output_figure = "figure_html_separate/"),
                           output_format = rmarkdown::html_document(
-                            self_contained=FALSE, lib_dir="qc_report_files")
-        )
-        
+                            self_contained=FALSE, 
+                            lib_dir="qc_report_files", 
+                            theme = "united",
+                            fig_caption = TRUE,
+                            df_print = "paged"))
+        print("done")
       }
       
     } else {
@@ -91,7 +94,8 @@ protein_quant_runner <- function(upload_folder, output_folder, protein_only = FA
         rmarkdown::render(file.path(output_folder, qc_report_name), 
                           params = list(output_figure = "figure_html_separate/"),
                           output_format = rmarkdown::html_document(
-                            self_contained=FALSE, lib_dir="qc_report_files")
+                            self_contained=FALSE, 
+                            lib_dir="qc_report_files")
         )
         
       }
@@ -165,7 +169,8 @@ protein_quant_runner <- function(upload_folder, output_folder, protein_only = FA
       rmarkdown::render(file.path(output_folder, qc_report_name), 
                         params = list(output_figure = "figure_html_separate/"),
                         output_format = rmarkdown::html_document(
-                          self_contained=FALSE, lib_dir="qc_report_files")
+                          self_contained=FALSE, 
+                          lib_dir=file.path(output_folder, "qc_report_files"))
       )
       
     }
@@ -202,33 +207,26 @@ protein_quant_runner <- function(upload_folder, output_folder, protein_only = FA
                       params = list(output_figure = "figure_html/"),
                       output_format = rmarkdown::html_document(
                         self_contained=FALSE,
+                        code_folding= "hide",
+                        theme="united",
+                        toc = TRUE,
+                        toc_float = TRUE,
+                        fig_caption= TRUE,
+                        df_print="paged",
                         lib_dir="qc_report_files"))
 
-    output_format = "pdf"
-    rmarkdown::render(file.path(output_folder, "QC_Report.Rmd"),
-                      output_format=rmarkdown::pdf_document(
-                        toc = TRUE,
-                        fig_caption= TRUE),
-                      params = list(output_figure = "figure_pdf/"))
+     output_format = "pdf"
+     rmarkdown::render(file.path(output_folder, "QC_Report.Rmd"),
+                       output_format=rmarkdown::pdf_document(
+                         toc = TRUE,
+                         fig_caption= TRUE),
+                       params = list(output_figure = "figure_pdf/"))
 
   }
 
-  # clean up
-  # figs <- list.files(file.path(output_folder, "QC_Report_files/figure-html/"))
-  # dir.create(file.path(output_folder, "figure_html/"))
-  
-  # for (fig in figs){
-    # copy the figure files for some reason
-    #file.copy(from=file.path(output_folder, "QC_Report_files/figure-html/",fig),
-  #             to=file.path(output_folder, "figure_html/"),
-  #             overwrite = TRUE, recursive = TRUE,
-  #             copy.mode = TRUE)
-  # }
-  
-  # Cleanup upload folder  
-  #list_qc_folders <- list.files(output_folder, pattern = "*_files$")
-  #list_qc_folders <- list_qc_folders[!(list_qc_folders %in% "QC_Report_files")]
-  #unlink(file.path(output_folder, list_qc_folders), recursive = TRUE)
+  # Remove folders
+  list_lib_files <- list.files(output_folder, pattern = "qc_report_files", full.names = TRUE)
+  unlink(list_lib_files, recursive = TRUE)
   list_rmd <- list.files(output_folder, pattern = "*Rmd$")
   unlink(file.path(output_folder, list_rmd), recursive = TRUE)
   

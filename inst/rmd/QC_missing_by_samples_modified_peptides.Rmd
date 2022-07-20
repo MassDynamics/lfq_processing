@@ -103,7 +103,7 @@ rm(prot_id_in_a_cond, prot_int_rep)
 
 ```
 
-```{r, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
+```{r missing-by-samples-mod-pep, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
 dt <- mod_pept_int[Imputed == 0, .(`% measured values` = .N/mod_pept_int[, length(unique(id))]), by = .(run_id, condition, Replicate)]
 dt[, Run := str_c(condition, Replicate, sep = " - ")]
 
@@ -118,7 +118,8 @@ p<- ggplot(dt, aes(y = `% measured values`, x = Run,
         panel.border = element_blank(),
         axis.ticks.y = element_blank()
   ) +
-  scale_x_discrete("Condition - Replicate")
+  scale_x_discrete("Condition - Replicate") +
+  ggtitle("Modified Peptides - Missingness by samples using")
 
 
 ggplotly(p, tooltip = c("x","y")) %>% config(displayModeBar = T, 

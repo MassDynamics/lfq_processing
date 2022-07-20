@@ -118,13 +118,14 @@ pca_dt <- dcast(pca_dt, condition + Replicate ~ id, value.var = "log2NInt")
 ```
 
 
-```{r, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
+```{r screeplot-proteins, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
 p <- ggplot(eig.val[1:num_dimensions], aes(x=reorder(dims, -`variance.percent`), y=`variance.percent`)) +
   geom_bar(stat="identity", fill = "skyblue2") +
   theme_minimal() +
   geom_text_repel(aes(label=(round(`variance.percent`,1))), direction = 'y') +
   scale_x_discrete("PCA components") +
-  scale_y_continuous("% Variance") 
+  scale_y_continuous("% Variance") +
+  ggtitle("Proteins - PCA Screeplot")
 
 
 ggplotly(p, tooltip = c("y")) %>% config(displayModeBar = T, 

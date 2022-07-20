@@ -122,13 +122,14 @@ eig.val <- data.table(dims = rownames(eig.val), eig.val)
 ```
 
 
-```{r, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
+```{r screeplot-mod-peptides, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
 scree_plot <- ggplot(eig.val[1:num_dimensions], aes(x=reorder(dims, -`variance.percent`), y=`variance.percent`)) +
   geom_bar(stat="identity", fill = "skyblue2") +
   theme_minimal() +
   geom_text_repel(aes(label=(round(`variance.percent`,1))), direction = 'y') +
   scale_x_discrete("PCA components") +
-  scale_y_continuous("% Variance") 
+  scale_y_continuous("% Variance") +
+  ggtitle("Modified Peptides - PCA Screeplot")
 
   ggplotly(scree_plot, tooltip = c("y")) %>% config(displayModeBar = T, 
                                                     modeBarButtons = list(list('toImage')),

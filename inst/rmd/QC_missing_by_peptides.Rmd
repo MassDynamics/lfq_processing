@@ -102,7 +102,7 @@ rm(prot_id_in_a_cond, prot_int_rep)
 
 ```
 
-```{r, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
+```{r missing-peptides, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
 dt <- unique(pept_int[Imputed == 0, .(ReplicatePC = .N/num_files), by = .(id)])
 
 ymax <- max(dt[, .N, by = .(ReplicatePC)][, N])
@@ -118,7 +118,8 @@ p <- ggplot(dt, aes(x = ReplicatePC)) +
         axis.ticks.y = element_blank()
   ) +
   scale_x_continuous("Percentage of measurements per peptide", labels = scales::percent, limits = c(0, 1.15), breaks = seq(0, 1, 0.1)) +
-  annotate('text', x = 0.5, y = 0.8*ymax, label=str_c("Number of peptides with\nmissing values <= 30%:\n ", dt[ReplicatePC >= 0.7, .N]))
+  annotate('text', x = 0.5, y = 0.8*ymax, label=str_c("Number of peptides with\nmissing values <= 30%:\n ", dt[ReplicatePC >= 0.7, .N])) +
+  ggtitle("Peptides measurements missingness")
 
 ggplotly(p, tooltip = c("y")) %>% config(displayModeBar = T, 
                                          modeBarButtons = list(list('toImage')),

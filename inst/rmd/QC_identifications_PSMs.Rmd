@@ -68,7 +68,7 @@ if (!("file_name" %in% colnames(expdes))){
 ```
 
 
-```{r, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
+```{r id-psms, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
 dt <- copy(msms)
 setnames(dt, "experiment", "condition")
 
@@ -98,7 +98,8 @@ p <- ggplot(dt, aes(x = as.factor(Run), y = N, color = condition, label=`raw fil
         panel.grid.major.y = element_blank(),
         panel.border = element_blank(),
         axis.ticks.y = element_blank()
-        )
+        ) +
+  ggtitle("PSMs - Number of identifications")
 
 
 ggplotly(p, tooltip = c("label","y")) %>% config(displayModeBar = T, 

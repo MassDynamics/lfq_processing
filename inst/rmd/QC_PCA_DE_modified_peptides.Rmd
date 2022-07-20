@@ -115,7 +115,7 @@ pca_dt <- mod_pept_int[Valid == 1, .(
 ```
 
 
-```{r, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
+```{r pca-de-mod-peptides, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
 name_of_column <- colnames(mod_pept)[colnames(mod_pept) == "adj.P.Val"]
 if (!identical(name_of_column, character(0)) && mod_pept[get(name_of_column) <= 0.05, .N] > 1) {
   DE_ids <- mod_pept[get(name_of_column) <= 0.05, unique(id)]
@@ -147,8 +147,8 @@ if (!identical(name_of_column, character(0)) && mod_pept[get(name_of_column) <= 
     geom_point(size = 3, alpha = 0.7) +
     theme_minimal() +
     scale_x_continuous(str_c("PCA 1 - ", eig.val[dims == "Dim.1", round(variance.percent,1)], "%")) +
-    scale_y_continuous(str_c("PCA 2 - ", eig.val[dims == "Dim.2", round(variance.percent,1)], "%"))
-    #ggtitle(str_c("PCA plot using the ", length(DE_ids), " differentially expressed peptides"))
+    scale_y_continuous(str_c("PCA 2 - ", eig.val[dims == "Dim.2", round(variance.percent,1)], "%")) +
+    ggtitle(str_c("PCA plot using the ", length(DE_ids), " differentially expressed modified peptides"))
   
   ggplotly(p, tooltip = c("label")) %>% config(displayModeBar = T, 
                                                modeBarButtons = list(list('toImage')),

@@ -104,7 +104,7 @@ rm(prot_id_in_a_cond, prot_int_rep)
 ```
 
 
-```{r, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
+```{r pca-mod-peptides, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
 pca_dt <- mod_pept_int[Valid == 1, .(
     id,
     condition,
@@ -139,7 +139,8 @@ p = p +   geom_label_repel(aes(label = file_name, fill = NULL),
                            box.padding   = 0.35, 
                            point.padding = 0.5,
                            segment.color = 'grey50',
-                           show.legend = FALSE)
+                           show.legend = FALSE) +
+  ggtitle("Modified Peptides - PCA")
 
 ggplotly(p, tooltip = c("label")) %>% config(displayModeBar = T, 
                                              modeBarButtons = list(list('toImage')),
