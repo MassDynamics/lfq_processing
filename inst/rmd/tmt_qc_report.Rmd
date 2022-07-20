@@ -15,7 +15,8 @@ output:
     toc_depth: 3
     fig_caption: false
   always_allow_html: true
-
+params:
+  output_figure: figures
 ---
 
 
@@ -51,7 +52,7 @@ details span {
 
 
 ```{r, eval=TRUE, warning=FALSE, echo=FALSE, error=FALSE, message=FALSE}
-knitr::opts_chunk$set(fig.cap = NULL)
+knitr::opts_chunk$set(fig.cap = NULL, fig.path = params$output_figure)
 
 library(knitr)
 library(data.table)
