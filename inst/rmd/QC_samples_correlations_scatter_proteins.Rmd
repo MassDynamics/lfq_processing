@@ -120,7 +120,7 @@ if (class(test) != "try-error") {
                ),
                lower = "blank",
                diag = NULL
-  )
+  ) + ggtitle("Correlation scatterplot - Proteins")
   print(p)
   
 } 

@@ -12,14 +12,97 @@ params:
 
 
 ```{r eval=TRUE, echo=FALSE, error=FALSE, message=FALSE, warning=FALSE}
-knitr::opts_chunk$set(fig.cap = NULL, fig.path = params$output_figure, dev = "svg", echo=FALSE, eval=TRUE)
+knitr::opts_chunk$set(fig.cap = NULL, fig.path = params$output_figure, echo=FALSE, eval=TRUE)
 ```
 
 
-```{r fake-cor}
-#library(ggplot2)
-#library(plotly)
+```{r eval=TRUE, echo=FALSE, error=FALSE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(fig.cap = NULL, fig.path = params$output_figure)
 
-#ggplot(mtcars, aes(mpg, cyl)) + geom_point()
+library(data.table)
+library(ggplot2)
+library(ggrepel)
+library(GGally)
+library(umap)
+library(FactoMineR)
+library(factoextra)
+library(corrplot)
+library(viridis)
+library(ggpubr)
+library(Hmisc)
+library(plotly)
+library(stringr)
+library(bit64)
+
+num_files <- expdes[, .N]
+run_per_condition <- expdes[, .(countRepMax = .N), by = .(experiment)]
+setnames(run_per_condition, "experiment", "condition")
+
+# for fractions, create file name from mqExperiment and Fraction
+if (!("file_name" %in% colnames(expdes))){
+  expdes$file_name = paste(expdes$experiment, " - ", expdes$Replicate)
+}
+
+
+mod_pept_int_rep <- merge(
+  run_per_condition,
+  mod_pept_int[Imputed == 0, .(Repcount = .N), by = .(id, condition)],
+  by = c("condition")
+)
+mod_pept_int_rep[, repPC := Repcount/countRepMax]
+mod_pept_id_in_a_cond <- mod_pept_int_rep[repPC >= 0.5, unique(id)]
+mod_pept_int[, Valid := 0L]
+mod_pept_int[id %in% mod_pept_id_in_a_cond, Valid := 1L]
+rm(mod_pept_id_in_a_cond, mod_pept_int_rep)
+
+
+prot_int_rep <- merge(
+  run_per_condition,
+  prot_int[Imputed == 0, .(Repcount = .N), by = .(id, condition)],
+  by = c("condition")
+)
+prot_int_rep[, repPC := Repcount/countRepMax]
+prot_id_in_a_cond <- prot_int_rep[repPC >= 0.5, unique(id)]
+prot_int[, Valid := 0L]
+prot_int[id %in% prot_id_in_a_cond, Valid := 1L]
+rm(prot_id_in_a_cond, prot_int_rep)
+
+
+```
+
+```{r fake-cor}
+if ("file_name" %in% colnames(prot_int)){
+  filenames <- prot_int[!(is.na(file_name)), unique(run_id)]
+} else {
+  filenames <- prot_int[, unique(run_id)]
+}
+
+int_corr_dt <- dcast.data.table(
+  prot_int[Imputed == 0],
+  id ~ condition + Replicate,
+  value.var = "log2NInt",
+  sep = "_"
+)
+
+# must have >4 observations for spearman correlation to run
+test = try(rcorr(as.matrix(int_corr_dt[, 2:ncol(int_corr_dt)])), silent = TRUE)
+
+if (class(test) != "try-error") {
+  
+  DT_corMatrix <- rcorr(as.matrix(int_corr_dt[, 2:ncol(int_corr_dt)]))
+  DT_corMatrix <- DT_corMatrix$r
+  DT_corMatrix[DT_corMatrix <= -1] = -1
+  DT_corMatrix[DT_corMatrix >= 1] = 1
+  #corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix", tl.cex = 0.5, mar = c(1,0,1.5,0))
+  if (num_files > 10) {
+    corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix - Proteins", tl.cex = 0.5, mar = c(1,0,1.5,0))
+    
+  } else {
+    corrplot(DT_corMatrix, type = "upper", title = "Correlation Matrix - Proteins", tl.cex = 0.5, mar = c(1,0,1.5,0), addCoef.col = "white", number.cex = .5)
+    
+  }
+  
+}
+  
 ```
 

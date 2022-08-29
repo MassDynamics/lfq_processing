@@ -129,10 +129,12 @@ if (class(test) != "try-error"){
       DT_corMatrix[DT_corMatrix >= 1] = 1
       
       if (num_files > 10) {
-        corrplot(DT_corMatrix, type = "upper", title = "", tl.cex = 0.5, mar = c(1,0,1.5,0))
+        corrplot(DT_corMatrix, type = "upper", title = "", tl.cex = 0.5, mar = c(1,0,1.5,0),
+                 title = "Correlation Matrix - DE peptides")
         
       } else {
-        corrplot(DT_corMatrix, type = "upper", title = "", tl.cex = 0.5, mar = c(1,0,1.5,0), addCoef.col = "white", number.cex = .5)
+        corrplot(DT_corMatrix, type = "upper", title = "", tl.cex = 0.5, mar = c(1,0,1.5,0), addCoef.col = "white", number.cex = .5,
+                 title = "Correlation Matrix - DE peptides")
         
       }
     }

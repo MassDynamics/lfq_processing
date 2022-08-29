@@ -134,7 +134,7 @@ if (class(test) != "try-error"){
                ),
                lower = "blank",
                diag = NULL
-  )
+  ) + ggtitle("Correlation scatterplot - Peptides")
   print(p)
 }
 ```
