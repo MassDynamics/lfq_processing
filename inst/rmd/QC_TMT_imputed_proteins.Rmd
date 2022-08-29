@@ -76,10 +76,11 @@ tmp$Imputed <- as.character(prot_int$Imputed)
 
 p <- ggplot(tmp, aes(x=log2NIntNorm, fill=Imputed, colour = Imputed)) +
   geom_density(alpha=0.4) +
-  theme_minimal()
+  theme_minimal() +
+  ggtitle("Proteins - Reporter intensity (Imputed vs Not)")
 
 
 ggplotly(p) %>% config(displayModeBar = T, 
                                                   modeBarButtons = list(list('toImage')),
-                                                  displaylogo = F)
+                                                  displaylogo = F) 
 ```

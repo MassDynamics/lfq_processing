@@ -78,7 +78,8 @@ p <- ggplot(dt, aes(x = `raw file`, y = percent,  fill=`missed cleavages`, label
         axis.ticks.y = element_blank(),
         legend.position = "top"
   ) +
-  labs(fill = "Missed\nCleavages")
+  labs(fill = "Missed\nCleavages") +
+  ggtitle("Digestion efficiency")
 
   ggplotly(p, tooltip = c("y")) %>% config(displayModeBar = T, 
                                            modeBarButtons = list(list('toImage')),

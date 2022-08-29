@@ -80,8 +80,8 @@ cvdt <- cvdt[ReplicatePC >= 0.5, .(cv = sd(intensity)/mean(intensity)), by = .(i
 p <- ggplot(cvdt, aes(x=cv, fill=condition, colour=condition)) +
   geom_density(alpha=0.4) +
   theme_minimal() +
-  scale_x_continuous("% CV", labels = scales::percent)
-  #ggtitle("Proteins - Reporter Intensity CV")
+  scale_x_continuous("% CV", labels = scales::percent) +
+  ggtitle("Proteins - Reporter intensity CV")
 
 
 ggplotly(p) %>% config(displayModeBar = T, 

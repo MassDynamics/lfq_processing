@@ -78,6 +78,7 @@ p <- ggplot(evidence, aes(x = `raw file`, y = pif, fill = '#AEC6CF', colour = '#
         legend.position = "none"
   ) +
   scale_x_discrete("Raw File") +
-  scale_y_continuous("Precursor Ion Fraction")
+  scale_y_continuous("Precursor Ion Fraction") +
+  ggtitle("Parent ion fraction")
 p
 ```

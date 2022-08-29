@@ -97,7 +97,8 @@ p <- ggplot(dt, aes(x = as.factor(Run), y = N, color = condition, label=replicat
         panel.grid.major.y = element_blank(),
         panel.border = element_blank(),
         axis.ticks.y = element_blank()
-  )
+  ) +
+    ggtitle("Proteins - Number of identifications from proteinGroups.txt")
 
 ggplotly(p, tooltip = c("label", "y")) %>% config(displayModeBar = T, 
                                                   modeBarButtons = list(list('toImage')),

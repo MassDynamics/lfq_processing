@@ -97,7 +97,8 @@ scree_plot <- ggplot(eig.val[1:num_dimensions], aes(x=reorder(dims, -`variance.p
   theme_minimal() +
   geom_text_repel(aes(label=(round(`variance.percent`,1))), direction = 'y') +
   scale_x_discrete("PCA components") +
-  scale_y_continuous("% Variance")
+  scale_y_continuous("% Variance") +
+  ggtitle("Proteins - PCA Screeplot")
 
 
 ggplotly(scree_plot, tooltip = c("y")) %>% config(displayModeBar = T, 

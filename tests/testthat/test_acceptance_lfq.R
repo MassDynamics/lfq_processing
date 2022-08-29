@@ -23,4 +23,3 @@ acceptance_test<- function(current, expected,
 load("../data/expected_her2.rda")
 
 acceptance_test(current_her2, expected_her2, 10**-3)
-
