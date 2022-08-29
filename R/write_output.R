@@ -5,6 +5,7 @@
 #' @example
 #' write_output(prot, output_folder, "proteinGroups_quant.txt")
 #' @export write_output
+
 write_output <- function(data, output_folder, file_name){
 
   fwrite(data, file.path(output_folder, file_name), row.names = FALSE,
