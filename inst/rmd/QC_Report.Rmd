@@ -1501,7 +1501,9 @@ if (output_format == "pdf"){
 ```
 
 \hfill\break
+
 #### With intensity values - from peptides.txt
+
 \hfill\break
 ```{r, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
 if (!protein_only){

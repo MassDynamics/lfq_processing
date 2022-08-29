@@ -37,7 +37,8 @@ get_names_qc_lfq_all <- function(){
                              "identifications_proteins", "identifications_proteins_evidence",
                              "identifications_peptides", "identifications_peptides_evidence",
                              "identifications_modified_peptides", "identifications_modified_peptides_evidence",
-
+                             "identifications_PSMs",
+                             
                              "missed_cleavages_evidence")
   #all_lfq_split_qc <- c("samples_correlations_proteins")
   return(all_lfq_split_qc)
