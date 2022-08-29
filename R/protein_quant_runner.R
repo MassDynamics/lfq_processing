@@ -55,7 +55,6 @@ protein_quant_runner <- function(upload_folder, output_folder, protein_only = FA
       all_qcs <- LFQProcessing:::get_names_qc_lfq_all()
       
       for(qc_name in all_qcs){
-        #qc_name <- "samples_correlations_proteins" 
         qc_report_name <- paste0("QC_", qc_name, ".Rmd")
         cat(paste("Writing ", qc_report_name))
         file.copy(from=system.file("rmd", qc_report_name, package = "LFQProcessing"),
