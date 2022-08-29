@@ -70,7 +70,7 @@ rm(prot_id_in_a_cond, prot_int_rep)
 
 ```
 
-```{r fake-cor}
+```{r sample-corr-proteins}
 if ("file_name" %in% colnames(prot_int)){
   filenames <- prot_int[!(is.na(file_name)), unique(run_id)]
 } else {

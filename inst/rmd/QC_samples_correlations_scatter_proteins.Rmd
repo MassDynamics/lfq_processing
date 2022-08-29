@@ -79,7 +79,7 @@ rm(prot_id_in_a_cond, prot_int_rep)
 ```
 
 
-```{r samples-correlations-scatter-proteins, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
+```{r samples-corr-scatter-proteins, eval=TRUE, warning=FALSE, echo=FALSE, message=FALSE, error=FALSE}
 if ("file_name" %in% colnames(prot_int)){
   filenames <- prot_int[!(is.na(file_name)), unique(run_id)]
 } else {
