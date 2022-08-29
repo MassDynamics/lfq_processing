@@ -13,6 +13,8 @@ protein_quant_runner <- function(upload_folder, output_folder, protein_only = FA
   start_time <- Sys.time()
   
   print("Running MQ Transformer")
+  print("getwd")
+  print(upload_folder)
   experiment_type = detect_exp_type(upload_folder)
   print("Detected experiment type:")
   print(experiment_type)

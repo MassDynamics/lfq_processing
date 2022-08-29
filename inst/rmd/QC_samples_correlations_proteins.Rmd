@@ -43,19 +43,6 @@ if (!("file_name" %in% colnames(expdes))){
   expdes$file_name = paste(expdes$experiment, " - ", expdes$Replicate)
 }
 
-
-mod_pept_int_rep <- merge(
-  run_per_condition,
-  mod_pept_int[Imputed == 0, .(Repcount = .N), by = .(id, condition)],
-  by = c("condition")
-)
-mod_pept_int_rep[, repPC := Repcount/countRepMax]
-mod_pept_id_in_a_cond <- mod_pept_int_rep[repPC >= 0.5, unique(id)]
-mod_pept_int[, Valid := 0L]
-mod_pept_int[id %in% mod_pept_id_in_a_cond, Valid := 1L]
-rm(mod_pept_id_in_a_cond, mod_pept_int_rep)
-
-
 prot_int_rep <- merge(
   run_per_condition,
   prot_int[Imputed == 0, .(Repcount = .N), by = .(id, condition)],

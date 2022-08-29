@@ -12,9 +12,7 @@ acceptance_test<- function(tolerance = 10**-3){
       #Delete file if it exists
       file.remove("../data/PXD020248/output/proteinGroups_quant.txt")
     }
-    
-    data_folder <- file.path(here(), "tests/data/PXD020248")
-    output_folder <- file.path(data_folder, "output")
+
     protein_quant_runner(upload_folder = "../data/PXD020248", 
                          output_folder = "../data/PXD020248/output", 
                          protein_only = TRUE)
@@ -25,6 +23,14 @@ acceptance_test<- function(tolerance = 10**-3){
     expect_true(approx_same) #tolerate small differences
   })
   
+  test_that("All QCs in LFQ Fractions are created", {
+  
+  expected_qcs <- file.path(output_folder, 
+                            c(paste0("QC_",LFQProcessing:::get_names_qc_lfq_protein_only(), ".html"),
+                              "QC_Report.html", "QC_Report.pdf"))
+  qc_exists <- sapply(expected_qcs, function(x) file.exists(x))
+  expect_true(all(qc_exists))
+  })
 }
 
 
