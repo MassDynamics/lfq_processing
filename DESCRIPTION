@@ -1,6 +1,6 @@
 Package: LFQProcessing
 Title: Processes Proteomics Files for Quantification.
-Version: 0.0.70
+Version: 0.0.71
 Author: Joseph Bloom <joseph@massdynamics.com> and
       Giuseppe Infusini <peppe@massdynamics.com> 
 Maintainer: The package maintainer <joseph@massdynamics.com>
