@@ -20,6 +20,7 @@ tests/data/PXD020248/output/proteinGroups_quant_intensities.txt
 tests/data/PXD020248/output/protein_counts_and_intensity.json
 tests/data/PXD020248/output/protein_data.rda
 tests/data/PXD020248/output/protein_viz.json
+tests/data/PXD020248/output/experimentDesign_output.txt
 
 tests/data/PXD028656/output/QC_Report.Rmd
 tests/data/PXD028656/output/*.html
@@ -55,6 +56,7 @@ tests/data/PXD026936/output/proteinGroups_quant_intensities.txt
 tests/data/PXD026936/output/protein_counts_and_intensity.json
 tests/data/PXD026936/output/protein_data.rda
 tests/data/PXD026936/output/protein_viz.json
+tests/data/PXD026936/output/experimentDesign_output.txt
 
 tests/testthat/.DS_Store
 tests/testthat/tmp/
