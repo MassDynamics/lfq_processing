@@ -38,18 +38,13 @@ expdes <- current_tmt[[3]]
 conditionComparisonMapping <- current_tmt[[4]]
 
 # get qc report from package
-file.copy(from=system.file("rmd","tmt_qc_report.Rmd", package = "LFQProcessing"),
-          to=file.path(output_folder,"QC_Report.Rmd"),
-          overwrite = TRUE, recursive = TRUE,
-          copy.mode = TRUE)
-
 print("\nCopy separate QCs\n")
 names_tmt_protein_only <- LFQProcessing:::get_names_qc_tmt_protein_only(evidence=FALSE)
 
 for(qc_name in names_tmt_protein_only){
   qc_report_name <- paste0("QC_", qc_name, ".Rmd")
   file.copy(from=system.file("rmd",qc_report_name, package = "LFQProcessing"),
-            to=file.path(output_folder,qc_report_name),
+            to=file.path(output_folder, qc_report_name),
             overwrite = TRUE, recursive = TRUE,
             copy.mode = TRUE)
   
@@ -62,6 +57,14 @@ for(qc_name in names_tmt_protein_only){
   )
   
 }
+
+# Copy complete report
+# upload_folder needed in the report
+upload_folder <- output_folder
+file.copy(from=system.file("rmd","tmt_qc_report.Rmd", package = "LFQProcessing"),
+          to=file.path(output_folder,"QC_Report.Rmd"),
+          overwrite = TRUE, recursive = TRUE,
+          copy.mode = TRUE)
 
 output_format = "html"
 rmarkdown::render(file.path(output_folder, "QC_Report.Rmd"),
