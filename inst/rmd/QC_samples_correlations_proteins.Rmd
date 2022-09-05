@@ -12,13 +12,11 @@ params:
 
 
 ```{r eval=TRUE, echo=FALSE, error=FALSE, message=FALSE, warning=FALSE}
-knitr::opts_chunk$set(fig.cap = NULL, fig.path = params$output_figure, echo=FALSE, eval=TRUE)
+knitr::opts_chunk$set(fig.cap = NULL, fig.path = params$output_figure, echo=FALSE, eval=TRUE, dev = "svg")
 ```
 
 
 ```{r eval=TRUE, echo=FALSE, error=FALSE, message=FALSE, warning=FALSE}
-knitr::opts_chunk$set(fig.cap = NULL, fig.path = params$output_figure)
-
 library(data.table)
 library(ggplot2)
 library(ggrepel)

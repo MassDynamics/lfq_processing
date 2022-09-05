@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', handleLoaded, false);
 
 
 ```{r eval=TRUE, echo=FALSE, error=FALSE, message=FALSE, warning=FALSE}
-knitr::opts_chunk$set(fig.cap = NULL, fig.path = params$output_figure)
+knitr::opts_chunk$set(fig.cap = NULL, fig.path = params$output_figure, dev = "svg")
 
 library(data.table)
 library(ggplot2)
