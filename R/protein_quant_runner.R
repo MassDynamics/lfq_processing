@@ -176,8 +176,12 @@ protein_quant_runner <- function(upload_folder, output_folder, protein_only = FA
       )
       
     }
+    
+    if (file.exists(file.path(upload_folder,"evidence.txt"))){
+      evidence <- generic_mq_table_reader(upload_folder, 'evidence.txt')
       
-    if (exists("evidence")){
+      print("Evidence file was uploaded")
+
       names_tmt_evidence <- LFQProcessing:::get_names_qc_tmt_protein_only(evidence=TRUE)
       
       for(qc_name in names_tmt_evidence){

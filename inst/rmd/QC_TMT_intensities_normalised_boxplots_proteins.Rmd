@@ -97,5 +97,5 @@ fig$x$data <- lapply(fig$x$data, FUN = function(x){
 })
 
 
-p
+fig
 ```
