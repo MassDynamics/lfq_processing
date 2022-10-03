@@ -119,7 +119,7 @@ p <- ggplot(dt, aes(x = ReplicatePC)) +
   ) +
   scale_x_continuous("Percentage of measurements per mod peptide", labels = scales::percent, limits = c(0, 1.15), breaks = seq(0, 1, 0.1)) +
   annotate('text', x = 0.5, y = 0.8*ymax, label=str_c("Number of mod peptides with\nmissing values <= 30%:\n ", dt[ReplicatePC >= 0.7, .N])) +
-  ggtitle("Modified peptides measurements missingness")
+  ggtitle("Modified peptide measurements availability")
 
 ggplotly(p, tooltip = c("y")) %>% config(displayModeBar = T, 
                                                modeBarButtons = list(list('toImage')),

@@ -578,7 +578,7 @@ if (output_format == "pdf"){
   <span>
     <p>During post-processing of your maxquant output, MD performs the following steps:</p>
     <ul>
-      <li>log2 Transformation of the impurities corrected experiment-channel columns</li>
+      <li>log2 Transformation of the reporter intensities</li>
       <li>MNAR imputation</li>
       <li>Normalization via median subtraction</li>
     </ul>
