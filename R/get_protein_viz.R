@@ -33,7 +33,10 @@ write_protein_viz <- function(prot, output_folder, conditionComparisonMapping){
   comparisons = conditionComparisonMapping$comparison.string
   i=1
   for (comparison in comparisons){
-    fdrLimit = max(prot[prot[[str_c("adj.P.Val ",comparison)]] <= 0.05,][[str_c("P.Value ",comparison)]], na.rm = T)
+    adjpval_comparison <- str_c("adj.P.Val ",comparison)
+    if(!(adjpval_comparison %in% colnames(prot))) next 
+    
+    fdrLimit = max(prot[prot[[adjpval_comparison]] <= 0.05,][[str_c("P.Value ",comparison)]], na.rm = T)
     
     protein_viz[[i]] = list(
       "conditionComparison" = unbox(comparison),
