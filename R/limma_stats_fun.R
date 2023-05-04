@@ -156,13 +156,14 @@ limma_stats_fun <- function(ID_type,
   #ipair = 1
   #### pairwise comparisons
   for (ipair in 1:pairwise.comp[, .N]) {
+    print(ipair)
     #print(ipair)
     subsecting <- funDT[get(condition_col_name) %in% pairwise.comp[ipair, c(left, right)], unique(run_id)]
     
     # Filter for IDs that are not present in at least one experiment in pairwise manner
     isPresent <- filterDT[get(condition_col_name) %in% pairwise.comp[ipair, c(left, right)] & repPC >= 0.5, unique(ID)]
     
-    if (length(isPresent) > 0) {
+    if (length(isPresent) > 3) {
       eset_pair <- eset[rownames(eset) %in% isPresent, colnames(eset) %in% subsecting]
       
       
